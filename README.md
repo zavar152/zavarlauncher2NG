@@ -1,7 +1,6 @@
 # Minecraft launcher for custom clients
-
+![Java-16+](https://img.shields.io/badge/java-16%2B-orange.svg)
 ### Current status: early dev
-
 Here is what's planned to be added:
 
 - Microsoft account system
@@ -20,7 +19,8 @@ Here is what's planned to be added:
 | Instance object model                    | In dev |
 | JSON files system for instances          |   --   |
 | Instance-creator application             |   --   |
-| GUI, Themes                              |   --   |
+| GUI                                      | In dev |
+| Themes                                   |Canceled|
 | Launcher settings                        |   --   |
 | Self-update system                       |   --   |
 | Minecraft launching                      |   --   |
