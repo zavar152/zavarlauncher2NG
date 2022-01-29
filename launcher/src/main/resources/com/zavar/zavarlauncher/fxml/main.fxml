@@ -13,12 +13,11 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-
-<AnchorPane fx:id="mainPane" prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane fx:id="mainPane" prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <ImageView fx:id="backgroundImage" fitHeight="502.0" fitWidth="801.0" pickOnBounds="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <ImageView fx:id="backgroundImage" fitHeight="502.0" fitWidth="809.0" layoutX="-3.0" layoutY="-1.0" pickOnBounds="true" AnchorPane.bottomAnchor="-1.0" AnchorPane.leftAnchor="-3.0" AnchorPane.rightAnchor="-5.0" AnchorPane.topAnchor="-1.0">
          <image>
-            <Image url="@img/background/default.png" />
+            <Image url="@../img/background/default.png" />
          </image>
          <effect>
             <BoxBlur height="1.0" width="1.0" />
@@ -29,19 +28,19 @@
          <children>
             <HBox alignment="CENTER" prefHeight="70.0" prefWidth="196.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                <children>
-                  <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" ellipsisString="" mnemonicParsing="false" prefHeight="75.0" prefWidth="75.0" styleClass="settings" stylesheets="@css/button.css" HBox.hgrow="NEVER">
+                  <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" ellipsisString="" mnemonicParsing="false" prefHeight="75.0" prefWidth="75.0" styleClass="settings" stylesheets="@../css/button.css" HBox.hgrow="NEVER">
                      <cursor>
                         <Cursor fx:constant="DEFAULT" />
                      </cursor>
                      <graphic>
                         <ImageView fitHeight="55.0" fitWidth="55.0" scaleX="1.2" scaleY="1.2">
                            <image>
-                              <Image url="@img/graphics/settings.png" />
+                              <Image url="@../img/graphics/settings.png" />
                            </image>
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" prefHeight="75.0" prefWidth="75.0" styleClass="dir" stylesheets="@css/button.css" HBox.hgrow="NEVER">
+                  <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" prefHeight="75.0" prefWidth="75.0" styleClass="dir" stylesheets="@../css/button.css" HBox.hgrow="NEVER">
                      <HBox.margin>
                         <Insets left="10.0" right="10.0" />
                      </HBox.margin>
@@ -51,19 +50,19 @@
                      <graphic>
                         <ImageView fitHeight="55.0" fitWidth="55.0" scaleX="1.2" scaleY="1.2">
                            <image>
-                              <Image url="@img/graphics/folder.png" />
+                              <Image url="@../img/graphics/folder.png" />
                            </image>
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" prefHeight="75.0" prefWidth="75.0" styleClass="update" stylesheets="@css/button.css" HBox.hgrow="NEVER">
+                  <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" prefHeight="75.0" prefWidth="75.0" styleClass="update" stylesheets="@../css/button.css" HBox.hgrow="NEVER">
                      <cursor>
                         <Cursor fx:constant="DEFAULT" />
                      </cursor>
                      <graphic>
                         <ImageView fitHeight="55.0" fitWidth="55.0" scaleX="1.2" scaleY="1.2">
                            <image>
-                              <Image url="@img/graphics/refresh.png" />
+                              <Image url="@../img/graphics/refresh.png" />
                            </image>
                            <viewport>
                               <Rectangle2D />
@@ -76,12 +75,12 @@
                   <Insets left="-5.0" right="-5.0" />
                </padding>
             </HBox>
-            <Button layoutX="-1.0" layoutY="342.0" mnemonicParsing="false" prefHeight="36.0" prefWidth="89.0" styleClass="play" stylesheets="@css/button.css" text="PLAY" textFill="WHITE" AnchorPane.bottomAnchor="90.0" AnchorPane.leftAnchor="-2.0" AnchorPane.rightAnchor="-2.0">
+            <Button layoutX="-1.0" layoutY="342.0" mnemonicParsing="false" prefHeight="36.0" prefWidth="89.0" styleClass="play" stylesheets="@../css/button.css" text="%main.play" textFill="WHITE" AnchorPane.bottomAnchor="90.0" AnchorPane.leftAnchor="-2.0" AnchorPane.rightAnchor="-2.0">
                <font>
                   <Font name="Verdana Bold" size="20.0" />
                </font>
             </Button>
-            <ListView layoutX="21.0" layoutY="111.0" prefHeight="200.0" prefWidth="200.0" stylesheets="@css/list.css" AnchorPane.bottomAnchor="145.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+            <ListView layoutX="21.0" layoutY="111.0" prefHeight="200.0" prefWidth="200.0" stylesheets="@../css/list.css" AnchorPane.bottomAnchor="145.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
          </children>
       </AnchorPane>
       <Label layoutX="519.0" layoutY="382.0" prefHeight="16.0" prefWidth="126.0" text="ZavarLauncher 2, 2021" textFill="#cbdae1" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="2.0">

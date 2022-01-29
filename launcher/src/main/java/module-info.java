@@ -11,4 +11,12 @@ module com.zavar.zavarlauncher {
 
     opens com.zavar.zavarlauncher to javafx.fxml;
     exports com.zavar.zavarlauncher;
+    exports com.zavar.zavarlauncher.update.handler;
+    opens com.zavar.zavarlauncher.update.handler to javafx.fxml;
+    opens com.zavar.zavarlauncher.lang;
+    opens com.zavar.zavarlauncher.css;
+    opens com.zavar.zavarlauncher.fxml;
+    opens com.zavar.zavarlauncher.img.graphics;
+    opens com.zavar.zavarlauncher.img.background;
+    opens com.zavar.zavarlauncher.img.icons;
 }
