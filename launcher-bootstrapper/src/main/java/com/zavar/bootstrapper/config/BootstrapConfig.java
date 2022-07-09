@@ -1,6 +1,7 @@
 package com.zavar.bootstrapper.config;
 
 import java.io.IOException;
+import java.net.*;
 import java.util.*;
 
 public class BootstrapConfig {
@@ -11,6 +12,7 @@ public class BootstrapConfig {
     private String launcherDownloadUrl = null;
     private String jreDownloadUrl = null;
     private String mainIp = null;
+    private String availableIp = null;
 
     public BootstrapConfig() throws IOException {
         ips = new ArrayList<>();
@@ -28,6 +30,42 @@ public class BootstrapConfig {
             }
         }
         return ips;
+    }
+
+    public String getAvailableIp() throws NullPointerException {
+        if(Objects.isNull(availableIp)) {
+            List<String> ips = getAllIps();
+            if(pingHost(mainIp,1500)) {
+                availableIp = mainIp;
+                return mainIp;
+            }
+
+            for (String value : ips) {
+                if (pingHost(value, 1500)) {
+                    availableIp = value;
+                    return value;
+                }
+            }
+            if(Objects.isNull(availableIp)) {
+                throw new NullPointerException("Server is offline");
+            }
+        }
+        return availableIp;
+    }
+
+    private boolean pingHost(String host, int timeout) {
+        try {
+            URL urlObj = new URL(host);
+            HttpURLConnection con = (HttpURLConnection) urlObj.openConnection();
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(timeout);
+            con.connect();
+
+            int code = con.getResponseCode();
+            return code == 200;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public Long getBootstrapVersion() {

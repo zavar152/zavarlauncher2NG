@@ -13,6 +13,8 @@ import javafx.scene.control.ProgressIndicator;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
@@ -41,13 +43,18 @@ public class BootstrapController implements Initializable {
     private final Path jreFolder = launcherFolder.resolve("jre");
 
     private final BootstrapConfig config = new BootstrapConfig();
-    private final JreManager jreManager = new JreManager(new URL(config.getJreDownloadUrl(config.getMainIp())), jreFolder);
+    private JreManager jreManager;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
 
     public BootstrapController() throws IOException {
+        try {
+            String host = config.getAvailableIp();
+            jreManager = new JreManager(new URL(config.getJreDownloadUrl(host)), jreFolder);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
     }
-
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         final List<Integer> jreToInstall = new ArrayList<>();
