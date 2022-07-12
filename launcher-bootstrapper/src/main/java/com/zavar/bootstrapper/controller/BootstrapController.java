@@ -1,11 +1,13 @@
 package com.zavar.bootstrapper.controller;
 
+import com.zavar.bootstrapper.Bootstrapper;
 import com.zavar.bootstrapper.config.BootstrapConfig;
 import com.zavar.bootstrapper.java.JreManager;
 import com.zavar.bootstrapper.util.ReadableByteChannelWrapper;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
@@ -13,8 +15,6 @@ import javafx.scene.control.ProgressIndicator;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
@@ -45,57 +45,63 @@ public class BootstrapController implements Initializable {
     private final BootstrapConfig config = new BootstrapConfig();
     private JreManager jreManager;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private boolean isOffline = true;
 
 
     public BootstrapController() throws IOException {
         try {
             String host = config.getAvailableIp();
             jreManager = new JreManager(new URL(config.getJreDownloadUrl(host)), jreFolder);
+            isOffline = false;
         } catch (NullPointerException e) {
-            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.WARNING, e.getMessage());
+            alert.setTitle("Bootstrapper error");
+            alert.initOwner(Bootstrapper.getStage());
+            alert.showAndWait();
         }
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        final List<Integer> jreToInstall = new ArrayList<>();
-        bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
-        info.setText("Loading");
+        if(!isOffline) {
+            final List<Integer> jreToInstall = new ArrayList<>();
+            bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+            info.setText("Loading");
 
-        try {
-            jreManager.getSupportedVersions().forEach(v -> {
-                if (!jreManager.isJreExists(v))
-                    jreToInstall.add(v);
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //TODO urls and paths from config
-        final Task<Void> jreDownloadTask = new Task<>() {
-            @Override
-            protected Void call() throws Exception {
-                NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
-                for(Integer i : jreToInstall) {
-                    ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(jreManager.getDownloadUrlForVersion(i).openStream()), contentLength(jreManager.getDownloadUrlForVersion(i)));
-                    bar.progressProperty().bind(rbc.getProgressProperty());
-                    rbc.getProgressProperty().addListener((observableValue, number, t1) -> {
-                        updateMessage(nf.format(observableValue.getValue()));
-                    });
-                    updateTitle("Downloading java " + i);
-                    FileOutputStream fileOutputStream = new FileOutputStream(tempFolder + "/" + i + ".zip");
-                    fileOutputStream.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-                    fileOutputStream.close();
-                    bar.progressProperty().unbind();
-                }
-                return null;
+            try {
+                jreManager.getSupportedVersions().forEach(v -> {
+                    if (!jreManager.isJreExists(v))
+                        jreToInstall.add(v);
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        };
 
-        info.textProperty().bind(jreDownloadTask.titleProperty());
-        progressInfo.textProperty().bind(jreDownloadTask.messageProperty());
+            //TODO urls and paths from config
+            final Task<Void> jreDownloadTask = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
+                    for(Integer i : jreToInstall) {
+                        ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(jreManager.getDownloadUrlForVersion(i).openStream()), contentLength(jreManager.getDownloadUrlForVersion(i)));
+                        bar.progressProperty().bind(rbc.getProgressProperty());
+                        rbc.getProgressProperty().addListener((observableValue, number, t1) -> {
+                            updateMessage(nf.format(observableValue.getValue()));
+                        });
+                        updateTitle("Downloading java " + i);
+                        FileOutputStream fileOutputStream = new FileOutputStream(tempFolder + "/" + i + ".zip");
+                        fileOutputStream.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                        fileOutputStream.close();
+                        bar.progressProperty().unbind();
+                    }
+                    return null;
+                }
+            };
 
-        executorService.submit(jreDownloadTask);
+            info.textProperty().bind(jreDownloadTask.titleProperty());
+            progressInfo.textProperty().bind(jreDownloadTask.messageProperty());
 
+            executorService.submit(jreDownloadTask);
+        }
     }
 
     private int contentLength(URL url) {

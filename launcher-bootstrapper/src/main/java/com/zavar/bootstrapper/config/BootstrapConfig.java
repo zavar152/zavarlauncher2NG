@@ -35,13 +35,14 @@ public class BootstrapConfig {
     public String getAvailableIp() throws NullPointerException {
         if(Objects.isNull(availableIp)) {
             List<String> ips = getAllIps();
-            if(pingHost(mainIp,1500)) {
+            ips.remove(mainIp);
+            if(pingHost(mainIp, 1000)) {
                 availableIp = mainIp;
                 return mainIp;
             }
 
             for (String value : ips) {
-                if (pingHost(value, 1500)) {
+                if (pingHost(value, 1000)) {
                     availableIp = value;
                     return value;
                 }
@@ -57,7 +58,7 @@ public class BootstrapConfig {
         try {
             URL urlObj = new URL(host);
             HttpURLConnection con = (HttpURLConnection) urlObj.openConnection();
-            con.setRequestMethod("GET");
+            con.setRequestMethod("HEAD");
             con.setConnectTimeout(timeout);
             con.connect();
 
