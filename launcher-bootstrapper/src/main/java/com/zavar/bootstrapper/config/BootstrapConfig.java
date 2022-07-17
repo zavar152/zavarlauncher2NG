@@ -7,26 +7,29 @@ import java.util.*;
 public class BootstrapConfig {
 
     private final List<String> ips;
-    private final Properties properties = new Properties();
+    private final Properties bootstrapProperties = new Properties();
+    private final Properties launcherProperties = new Properties();
     private Long version = null;
     private String launcherDownloadUrl = null;
+    private String launcherJavaVersion = null;
     private String jreDownloadUrl = null;
     private String mainIp = null;
     private String availableIp = null;
 
     public BootstrapConfig() throws IOException {
         ips = new ArrayList<>();
-        properties.load(Objects.requireNonNull(getClass().getResourceAsStream("/config/bootstrap.properties")));
+        bootstrapProperties.load(Objects.requireNonNull(getClass().getResourceAsStream("/config/bootstrap.properties")));
+        launcherProperties.load(Objects.requireNonNull(getClass().getResourceAsStream("/config/launcher.properties")));
     }
 
     public List<String> getAllIps() {
         if(ips.size() == 0) {
-            List<String> props = Objects.requireNonNull(properties.stringPropertyNames().stream().filter(s -> s.startsWith("serverName")).toList(), "Servers is missing");
+            List<String> props = Objects.requireNonNull(bootstrapProperties.stringPropertyNames().stream().filter(s -> s.startsWith("serverName")).toList(), "Servers is missing");
 
-            mainIp = properties.getProperty("serverNameMain");
+            mainIp = bootstrapProperties.getProperty("serverNameMain");
 
             for(String key : props) {
-                ips.add(requireNonEmpty(properties.getProperty(key), key + " is missing"));
+                ips.add(requireNonEmpty(bootstrapProperties.getProperty(key), key + " is missing"));
             }
         }
         return ips;
@@ -34,15 +37,16 @@ public class BootstrapConfig {
 
     public String getAvailableIp() throws NullPointerException {
         if(Objects.isNull(availableIp)) {
+            int timeout = Integer.parseInt(requireNonEmpty(bootstrapProperties.getProperty("pingTimeout"), "pingTimeout is missing"));
             List<String> ips = getAllIps();
             ips.remove(mainIp);
-            if(pingHost(mainIp, 1000)) {
+            if(pingHost(mainIp, timeout)) {
                 availableIp = mainIp;
                 return mainIp;
             }
 
             for (String value : ips) {
-                if (pingHost(value, 1000)) {
+                if (pingHost(value, timeout)) {
                     availableIp = value;
                     return value;
                 }
@@ -71,26 +75,32 @@ public class BootstrapConfig {
 
     public Long getBootstrapVersion() {
         if(Objects.isNull(version))
-            version = Long.parseLong(requireNonEmpty(properties.getProperty("version"), "Version is missing"));
+            version = Long.parseLong(requireNonEmpty(bootstrapProperties.getProperty("version"), "Version is missing"));
         return version;
     }
 
     public String getMainIp() {
         if(Objects.isNull(mainIp))
-            mainIp = requireNonEmpty(properties.getProperty("serverNameMain"), "Main server name is missing");
+            mainIp = requireNonEmpty(bootstrapProperties.getProperty("serverNameMain"), "Main server name is missing");
         return mainIp;
     }
 
     public String getJreDownloadUrl(String serverUrl) {
         if(Objects.isNull(jreDownloadUrl))
-            jreDownloadUrl = serverUrl + requireNonEmpty(properties.getProperty("jreDownloadUrl"), "Jre url is missing");
+            jreDownloadUrl = serverUrl + requireNonEmpty(bootstrapProperties.getProperty("jreDownloadUrl"), "Jre url is missing");
         return jreDownloadUrl;
     }
 
     public String getLauncherDownloadUrl() {
         if(Objects.isNull(launcherDownloadUrl))
-            launcherDownloadUrl = requireNonEmpty(properties.getProperty("launcherDownloadUrl"), "Launcher url is missing");
+            launcherDownloadUrl = requireNonEmpty(bootstrapProperties.getProperty("launcherDownloadUrl"), "Launcher url is missing");
         return launcherDownloadUrl;
+    }
+
+    public String getLauncherJavaVersion() {
+        if(Objects.isNull(launcherJavaVersion))
+            launcherJavaVersion = requireNonEmpty(launcherProperties.getProperty("launcherJavaVersion"), "Launcher java version is missing");
+        return launcherJavaVersion;
     }
 
     private static <T> T requireNonEmpty(T obj, String message) {

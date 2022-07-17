@@ -1,5 +1,5 @@
 # Minecraft launcher for custom clients
-![Java-16+](https://img.shields.io/badge/java-16%2B-orange.svg)
+![Java-17+](https://img.shields.io/badge/java-17%2B-orange.svg)
 ### Current status: early dev
 Here is what's planned to be added:
 
@@ -22,10 +22,10 @@ Here is what's planned to be added:
 | GUI                                      | In dev |
 | Themes                                   |Canceled|
 | Launcher settings                        |   --   |
-| Self-update system                       |   --   |
+| Self-update system                       | In dev |
 | Minecraft launching                      |   --   |
 | Launcher's console                       |   --   |
-| Authorization system 1: Mojang           |   --   |
+| Authorization system 1: Mojang           |Canceled|
 | Authorization system 2: Microsoft        |   --   |
 | Authorization system 3: Offline          |   --   |
 | Account storage and profile skin         |   --   |

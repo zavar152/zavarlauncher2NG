@@ -10,14 +10,24 @@
     <name>zavarlauncher</name>
     <packaging>pom</packaging>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <modules>
         <module>launcher</module>
         <module>instance-builder</module>
         <module>launcher-bootstrapper</module>
+        <module>launcher-common</module>
     </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -70,6 +80,16 @@
             <groupId>org.to2mbn</groupId>
             <artifactId>jmccc</artifactId>
             <version>2.5-beta-1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.PlusHaze</groupId>
+            <artifactId>TrayNotification</artifactId>
+            <version>master</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
         </dependency>
     </dependencies>
 </project>

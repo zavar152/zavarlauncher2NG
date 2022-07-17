@@ -1,9 +1,13 @@
 package com.zavar.bootstrapper.controller;
 
-import com.zavar.bootstrapper.Bootstrapper;
+import com.github.plushaze.traynotification.animations.Animations;
+import com.github.plushaze.traynotification.notification.Notifications;
+import com.github.plushaze.traynotification.notification.TrayNotification;
 import com.zavar.bootstrapper.config.BootstrapConfig;
 import com.zavar.bootstrapper.java.JreManager;
 import com.zavar.bootstrapper.util.ReadableByteChannelWrapper;
+import com.zavar.common.finder.JavaFinder;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -11,18 +15,19 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.image.Image;
+import javafx.stage.StageStyle;
+import javafx.util.Duration;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,28 +46,30 @@ public class BootstrapController implements Initializable {
     private final Path launcherFolder = userHomeFolder.resolve("zavarlauncher2");
     private final Path tempFolder = launcherFolder.resolve("temp");
     private final Path jreFolder = launcherFolder.resolve("jre");
+    private final Set<JavaFinder.Java> javas;
 
-    private final BootstrapConfig config = new BootstrapConfig();
+    private final BootstrapConfig config;
     private JreManager jreManager;
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final ExecutorService executorService;
     private boolean isOffline = true;
 
-
     public BootstrapController() throws IOException {
+        config = new BootstrapConfig();
+        executorService = Executors.newCachedThreadPool();
+        javas = JavaFinder.find();
         try {
-            String host = config.getAvailableIp();
-            jreManager = new JreManager(new URL(config.getJreDownloadUrl(host)), jreFolder);
+            jreManager = new JreManager(new URL(config.getJreDownloadUrl(config.getAvailableIp())), jreFolder);
             isOffline = false;
-        } catch (NullPointerException e) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, e.getMessage());
-            alert.setTitle("Bootstrapper error");
-            alert.initOwner(Bootstrapper.getStage());
-            alert.showAndWait();
+        } catch (NullPointerException | MalformedURLException e) {
+            TrayNotification tray = new TrayNotification("Bootstrapper warning", e.getMessage(), Notifications.WARNING);
+            tray.setTrayIcon(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/img/icon.png"))));
+            tray.setAnimation(Animations.POPUP);
+            tray.showAndDismiss(Duration.millis(3500));
         }
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        if(!isOffline) {
+        if (!isOffline) {
             final List<Integer> jreToInstall = new ArrayList<>();
             bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
             info.setText("Loading");
@@ -73,7 +80,11 @@ public class BootstrapController implements Initializable {
                         jreToInstall.add(v);
                 });
             } catch (IOException e) {
-                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.WARNING, e.getMessage());
+                alert.setTitle("Bootstrapper error");
+                alert.initStyle(StageStyle.UNDECORATED);
+                alert.showAndWait();
+                Platform.exit();
             }
 
             //TODO urls and paths from config
@@ -81,7 +92,7 @@ public class BootstrapController implements Initializable {
                 @Override
                 protected Void call() throws Exception {
                     NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
-                    for(Integer i : jreToInstall) {
+                    for (Integer i : jreToInstall) {
                         ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(jreManager.getDownloadUrlForVersion(i).openStream()), contentLength(jreManager.getDownloadUrlForVersion(i)));
                         bar.progressProperty().bind(rbc.getProgressProperty());
                         rbc.getProgressProperty().addListener((observableValue, number, t1) -> {
@@ -101,23 +112,29 @@ public class BootstrapController implements Initializable {
             progressInfo.textProperty().bind(jreDownloadTask.messageProperty());
 
             executorService.submit(jreDownloadTask);
+        } else {
+            bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+            info.setText("Loading launcher...");
+            if(true) {
+
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING, "Java 17 couldn't be found");
+                alert.setTitle("Bootstrapper error");
+                alert.initStyle(StageStyle.UNDECORATED);
+                alert.showAndWait();
+                Platform.exit();
+            }
         }
     }
 
-    private int contentLength(URL url) {
+    private int contentLength(URL url) throws IOException {
         HttpURLConnection connection;
         int contentLength = -1;
 
-        try {
-            HttpURLConnection.setFollowRedirects(false);
-
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("HEAD");
-
-            contentLength = connection.getContentLength();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        HttpURLConnection.setFollowRedirects(false);
+        connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("HEAD");
+        contentLength = connection.getContentLength();
 
         return contentLength;
     }
