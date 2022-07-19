@@ -10,7 +10,7 @@ module com.zavar.bootstrapper {
     requires org.json;
     requires TrayNotification.master;
     requires launcher.common;
-
+    requires zip4j;
 
     opens com.zavar.bootstrapper to javafx.fxml;
     opens com.zavar.bootstrapper.controller to javafx.fxml;
