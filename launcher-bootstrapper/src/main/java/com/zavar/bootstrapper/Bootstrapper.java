@@ -6,13 +6,16 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 
 import java.io.IOException;
 import java.util.Objects;
 
 public class Bootstrapper extends Application {
 
-    private static Stage stage;
+    private static CloseEvent onCloseEvent;
 
     public static void main(String[] args) {
         launch(args);
@@ -24,13 +27,21 @@ public class Bootstrapper extends Application {
         splashStage.initStyle(StageStyle.UNDECORATED);
         Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxml/bootstrap.fxml"))), 300, 50);
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/bootstrap.css")).toExternalForm());
+        JMetro jMetro = new JMetro(Style.LIGHT);
+        jMetro.setScene(scene);
         splashStage.setScene(scene);
         splashStage.setTitle("ZL2 Bootstrapper");
         splashStage.show();
-        stage = splashStage;
+        splashStage.setOnCloseRequest(windowEvent -> onCloseEvent.onCloseEvent(windowEvent));
     }
 
-    public static Stage getStage() {
-        return stage;
+    public static void setOnCloseEvent(CloseEvent onCloseEvent) {
+        Bootstrapper.onCloseEvent = onCloseEvent;
     }
+
+    @FunctionalInterface
+    public interface CloseEvent {
+        void onCloseEvent(WindowEvent event);
+    }
+
 }

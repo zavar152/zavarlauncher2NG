@@ -3,6 +3,7 @@ package com.zavar.bootstrapper.controller;
 import com.github.plushaze.traynotification.animations.Animations;
 import com.github.plushaze.traynotification.notification.Notifications;
 import com.github.plushaze.traynotification.notification.TrayNotification;
+import com.zavar.bootstrapper.Bootstrapper;
 import com.zavar.bootstrapper.config.BootstrapConfig;
 import com.zavar.bootstrapper.java.JreManager;
 import com.zavar.bootstrapper.util.ReadableByteChannelWrapper;
@@ -20,6 +21,7 @@ import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.progress.ProgressMonitor;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -58,7 +60,7 @@ public class BootstrapController implements Initializable {
 
     public BootstrapController() throws IOException {
         if(!launcherFolder.toFile().exists())
-            launcherFolder.toFile().mkdir();
+            FileUtils.forceMkdir(launcherFolder.toFile());
         config = new BootstrapConfig();
         executorService = Executors.newCachedThreadPool();
         javas = JavaFinder.find();
@@ -86,6 +88,7 @@ public class BootstrapController implements Initializable {
                         jreToInstall.add(v);
                 });
                 System.out.println(jreToInstall);
+                FileUtils.forceDeleteOnExit(tempFolder.toFile());
             } catch (IOException e) {
                 Alert alert = new Alert(Alert.AlertType.WARNING, e.getMessage());
                 alert.setTitle("Bootstrapper error");
@@ -96,70 +99,92 @@ public class BootstrapController implements Initializable {
 
             final Task<Void> jreDownloadTask = new Task<>() {
                 @Override
-                protected Void call() throws Exception {
-                    NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
-                    for (Integer i : jreToInstall) {
-                        File zipFile = new File(tempFolder + "/" + i + ".zip");
-                        if(!zipFile.exists()) {
-                            ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(jreManager.getDownloadUrlForVersion(i).openStream()), contentLength(jreManager.getDownloadUrlForVersion(i)));
-                            bar.progressProperty().bind(rbc.getProgressProperty());
-                            rbc.getProgressProperty().addListener((observableValue, number, t1) -> {
-                                updateMessage(nf.format(observableValue.getValue()));
-                            });
-                            updateTitle("Downloading java " + i);
-                            if(!tempFolder.toFile().exists())
-                                tempFolder.toFile().mkdir();
+                protected Void call() {
+                    try {
+                        NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
+                        for (Integer i : jreToInstall) {
+                            File zipFile = new File(tempFolder + "/" + i + ".zip");
 
-                            FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
-                            fileOutputStream.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-                            fileOutputStream.close();
-                            bar.progressProperty().unbind();
+                            if(zipFile.exists() && FileUtils.sizeOf(zipFile) != contentLength(jreManager.getDownloadUrlForVersion(i))) {
+                                FileUtils.delete(zipFile);
+                            }
+                            if(!zipFile.exists()) {
+                                ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(jreManager.getDownloadUrlForVersion(i).openStream()), contentLength(jreManager.getDownloadUrlForVersion(i)));
+                                bar.progressProperty().bind(rbc.getProgressProperty());
+                                rbc.getProgressProperty().addListener((observableValue, number, t1) -> updateMessage(nf.format(observableValue.getValue())));
+                                updateTitle("Downloading java " + i);
+                                if(!tempFolder.toFile().exists())
+                                    FileUtils.forceMkdir(tempFolder.toFile());
+
+                                FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
+                                fileOutputStream.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                                fileOutputStream.close();
+                                bar.progressProperty().unbind();
+                            }
+                            if(isCancelled()) {
+                                break;
+                            }
+                            updateTitle("Unzipping java " + i);
+                            ZipFile toUnzipFile = new ZipFile(zipFile);
+                            toUnzipFile.setRunInThread(true);
+                            ProgressMonitor progressMonitor = toUnzipFile.getProgressMonitor();
+                            toUnzipFile.extractAll(jreFolder + "/" + i);
+                            while (progressMonitor.getState() == ProgressMonitor.STATE_BUSY) {
+                                updateMessage(nf.format(progressMonitor.getPercentDone()/100.0));
+                                bar.setProgress(progressMonitor.getPercentDone()/100.0);
+                            }
+                            FileUtils.delete(zipFile);
                         }
-                        updateTitle("Unzipping java " + i);
-                        ZipFile toUnzipFile = new ZipFile(zipFile);
-                        toUnzipFile.setRunInThread(true);
-                        ProgressMonitor progressMonitor = toUnzipFile.getProgressMonitor();
-                        toUnzipFile.extractAll(jreFolder + "/" + i);
-                        while (progressMonitor.getState() == ProgressMonitor.STATE_BUSY) {
-                            updateMessage(nf.format(progressMonitor.getPercentDone()/100.0));
-                            bar.setProgress(progressMonitor.getPercentDone()/100.0);
-                        }
-                        zipFile.delete();
+                        updateTitle("Java is ready");
+                    } catch(Exception e) {
+                        Alert alert = new Alert(Alert.AlertType.WARNING, e.getMessage());
+                        alert.setTitle("Bootstrapper error");
+                        alert.initStyle(StageStyle.UNDECORATED);
+                        alert.showAndWait();
                     }
-                    updateTitle("Java is ready");
                     return null;
                 }
             };
 
             info.textProperty().bind(jreDownloadTask.titleProperty());
             progressInfo.textProperty().bind(jreDownloadTask.messageProperty());
-
+            Bootstrapper.setOnCloseEvent((windowEvent) -> {
+                if(!jreDownloadTask.isRunning()) {
+                    Platform.exit();
+                    System.exit(0);
+                } else {
+                    windowEvent.consume();
+                }
+            });
             executorService.submit(jreDownloadTask);
         } else {
+            Bootstrapper.setOnCloseEvent((windowEvent) -> {
+                Platform.exit();
+                System.exit(0);
+            });
             bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
             info.setText("Loading launcher...");
             if(javas.stream().anyMatch(java -> java.version() == Integer.parseInt(config.getLauncherJavaVersion()))) {
-
+                System.out.println("launching...");
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING, "Java " + config.getLauncherJavaVersion() + " couldn't be found");
                 alert.setTitle("Bootstrapper error");
                 alert.initStyle(StageStyle.UNDECORATED);
                 alert.showAndWait();
                 Platform.exit();
+                System.exit(0);
             }
         }
     }
 
-    private int contentLength(URL url) throws IOException {
+    private long contentLength(URL url) throws IOException {
         HttpURLConnection connection;
-        int contentLength = -1;
 
         HttpURLConnection.setFollowRedirects(false);
         connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("HEAD");
-        contentLength = connection.getContentLength();
 
-        return contentLength;
+        return connection.getContentLengthLong();
     }
 
 }
