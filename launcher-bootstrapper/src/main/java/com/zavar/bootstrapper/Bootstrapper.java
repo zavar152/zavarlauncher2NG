@@ -26,10 +26,10 @@ public class Bootstrapper extends Application {
         splashStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/img/icon.png"))));
         splashStage.initStyle(StageStyle.UNDECORATED);
         Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxml/bootstrap.fxml"))), 300, 50);
-        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/bootstrap.css")).toExternalForm());
         JMetro jMetro = new JMetro(Style.LIGHT);
         jMetro.setScene(scene);
         splashStage.setScene(scene);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/bootstrap.css")).toExternalForm());
         splashStage.setTitle("ZL2 Bootstrapper");
         splashStage.show();
         splashStage.setOnCloseRequest(windowEvent -> onCloseEvent.onCloseEvent(windowEvent));
