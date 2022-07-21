@@ -1,6 +1,7 @@
 package com.zavar.bootstrapper.java;
 
 import com.zavar.bootstrapper.util.Util;
+import org.apache.commons.lang3.SystemUtils;
 import org.json.JSONArray;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ public class JreManager {
     private final URL downloadUrl;
     private final Path jreFolderPath;
 
-    public  JreManager(URL downloadUrl, Path jreFolderPath) {
+    public JreManager(URL downloadUrl, Path jreFolderPath) {
         this.downloadUrl = downloadUrl;
         this.jreFolderPath = jreFolderPath;
     }
@@ -25,11 +26,14 @@ public class JreManager {
         return jreVersions.toList().stream().map(o -> (Integer)o).toList();
     }
 
-    //TODO only windows support
     public boolean isJreExists(Integer version) {
-        return Files.exists(jreFolderPath.resolve(version.toString()).resolve("bin").resolve("java.exe"));
+        if(SystemUtils.IS_OS_WINDOWS)
+            return Files.exists(jreFolderPath.resolve(version.toString()).resolve("bin").resolve("java.exe"));
+        else
+            return Files.exists(jreFolderPath.resolve(version.toString()).resolve("bin").resolve("java"));
     }
 
+    //TODO only windows support
     public URL getDownloadUrlForVersion(Integer version) throws MalformedURLException {
         return new URL(downloadUrl.toExternalForm() + "/" + version + ".zip");
     }

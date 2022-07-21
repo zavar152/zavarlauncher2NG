@@ -7,8 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
@@ -21,8 +20,17 @@ public class Util {
             while ((cp = rd.read()) != -1) {
                 sb.append((char) cp);
             }
-            String jsonText = sb.toString();
-            return new JSONObject(jsonText);
+            return new JSONObject(sb.toString());
         }
+    }
+
+    public static long contentLength(URL url) throws IOException {
+        HttpURLConnection connection;
+
+        HttpURLConnection.setFollowRedirects(false);
+        connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("HEAD");
+
+        return connection.getContentLengthLong();
     }
 }

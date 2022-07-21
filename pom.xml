@@ -113,5 +113,10 @@
             <artifactId>jmetro</artifactId>
             <version>11.6.15</version>
         </dependency>
+        <dependency>
+            <groupId>com.vdurmont</groupId>
+            <artifactId>semver4j</artifactId>
+            <version>3.1.0</version>
+        </dependency>
     </dependencies>
 </project>

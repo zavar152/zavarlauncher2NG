@@ -5,8 +5,9 @@ import com.github.plushaze.traynotification.notification.Notifications;
 import com.github.plushaze.traynotification.notification.TrayNotification;
 import com.zavar.bootstrapper.Bootstrapper;
 import com.zavar.bootstrapper.config.BootstrapConfig;
+import com.zavar.bootstrapper.download.JreDownloadTask;
+import com.zavar.bootstrapper.download.LauncherDownloadTask;
 import com.zavar.bootstrapper.java.JreManager;
-import com.zavar.bootstrapper.util.ReadableByteChannelWrapper;
 import com.zavar.common.finder.JavaFinder;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -19,19 +20,12 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.channels.Channels;
 import java.nio.file.Path;
-import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,6 +51,7 @@ public class BootstrapController implements Initializable {
     private JreManager jreManager;
     private final ExecutorService executorService;
     private boolean isOffline = true;
+    private String availableIp;
 
     public BootstrapController() throws IOException {
         if(!launcherFolder.toFile().exists())
@@ -66,13 +61,15 @@ public class BootstrapController implements Initializable {
         javas = JavaFinder.find();
         System.out.println(javas);
         try {
-            jreManager = new JreManager(new URL(config.getJreDownloadUrl(config.getAvailableIp())), jreFolder);
+            availableIp = config.getAvailableIp();
+            jreManager = new JreManager(new URL(config.getJreDownloadUrl(availableIp)), jreFolder);
             isOffline = false;
         } catch (NullPointerException | MalformedURLException e) {
             TrayNotification tray = new TrayNotification("Bootstrapper warning", e.getMessage(), Notifications.WARNING);
             tray.setTrayIcon(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/img/icon.png"))));
             tray.setAnimation(Animations.POPUP);
             tray.showAndDismiss(Duration.millis(3500));
+            e.printStackTrace();
         }
     }
     @Override
@@ -93,58 +90,12 @@ public class BootstrapController implements Initializable {
                 Alert alert = new Alert(Alert.AlertType.WARNING, e.getMessage());
                 alert.setTitle("Bootstrapper error");
                 alert.initStyle(StageStyle.UNDECORATED);
+                e.printStackTrace();
                 alert.showAndWait();
                 Platform.exit();
             }
 
-            final Task<Void> jreDownloadTask = new Task<>() {
-                @Override
-                protected Void call() {
-                    try {
-                        NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
-                        for (Integer i : jreToInstall) {
-                            File zipFile = new File(tempFolder + "/" + i + ".zip");
-
-                            if(zipFile.exists() && FileUtils.sizeOf(zipFile) != contentLength(jreManager.getDownloadUrlForVersion(i))) {
-                                FileUtils.delete(zipFile);
-                            }
-                            if(!zipFile.exists()) {
-                                ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(jreManager.getDownloadUrlForVersion(i).openStream()), contentLength(jreManager.getDownloadUrlForVersion(i)));
-                                bar.progressProperty().bind(rbc.getProgressProperty());
-                                rbc.getProgressProperty().addListener((observableValue, number, t1) -> updateMessage(nf.format(observableValue.getValue())));
-                                updateTitle("Downloading java " + i);
-                                if(!tempFolder.toFile().exists())
-                                    FileUtils.forceMkdir(tempFolder.toFile());
-
-                                FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
-                                fileOutputStream.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-                                fileOutputStream.close();
-                                bar.progressProperty().unbind();
-                            }
-                            if(isCancelled()) {
-                                break;
-                            }
-                            updateTitle("Unzipping java " + i);
-                            ZipFile toUnzipFile = new ZipFile(zipFile);
-                            toUnzipFile.setRunInThread(true);
-                            ProgressMonitor progressMonitor = toUnzipFile.getProgressMonitor();
-                            toUnzipFile.extractAll(jreFolder + "/" + i);
-                            while (progressMonitor.getState() == ProgressMonitor.STATE_BUSY) {
-                                updateMessage(nf.format(progressMonitor.getPercentDone()/100.0));
-                                bar.setProgress(progressMonitor.getPercentDone()/100.0);
-                            }
-                            FileUtils.delete(zipFile);
-                        }
-                        updateTitle("Java is ready");
-                    } catch(Exception e) {
-                        Alert alert = new Alert(Alert.AlertType.WARNING, e.getMessage());
-                        alert.setTitle("Bootstrapper error");
-                        alert.initStyle(StageStyle.UNDECORATED);
-                        alert.showAndWait();
-                    }
-                    return null;
-                }
-            };
+            final Task<Void> jreDownloadTask = new JreDownloadTask(jreToInstall, tempFolder, jreFolder, jreManager, bar);
 
             info.textProperty().bind(jreDownloadTask.titleProperty());
             progressInfo.textProperty().bind(jreDownloadTask.messageProperty());
@@ -156,6 +107,19 @@ public class BootstrapController implements Initializable {
                     windowEvent.consume();
                 }
             });
+            jreDownloadTask.setOnSucceeded(workerStateEvent -> {
+                Task<Void> launcherDownloadTask = new LauncherDownloadTask(launcherFolder, availableIp + config.getLauncherDownloadUrl());
+                launcherDownloadTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
+                    System.out.println(t1);
+                });
+                info.textProperty().unbind();
+                progressInfo.textProperty().unbind();
+                info.textProperty().bind(launcherDownloadTask.titleProperty());
+                progressInfo.textProperty().bind(launcherDownloadTask.messageProperty());
+                bar.progressProperty().bind(launcherDownloadTask.progressProperty());
+                executorService.submit(launcherDownloadTask);
+            });
+
             executorService.submit(jreDownloadTask);
         } else {
             Bootstrapper.setOnCloseEvent((windowEvent) -> {
@@ -164,8 +128,10 @@ public class BootstrapController implements Initializable {
             });
             bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
             info.setText("Loading launcher...");
-            if(javas.stream().anyMatch(java -> java.version() == Integer.parseInt(config.getLauncherJavaVersion()))) {
+            if(javas.stream().anyMatch(java -> java.version() >= Integer.parseInt(config.getLauncherJavaVersion()))) {
                 System.out.println("launching...");
+            } else if(jreManager.isJreExists(Integer.parseInt(config.getLauncherJavaVersion()))) {
+
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING, "Java " + config.getLauncherJavaVersion() + " couldn't be found");
                 alert.setTitle("Bootstrapper error");
@@ -175,16 +141,6 @@ public class BootstrapController implements Initializable {
                 System.exit(0);
             }
         }
-    }
-
-    private long contentLength(URL url) throws IOException {
-        HttpURLConnection connection;
-
-        HttpURLConnection.setFollowRedirects(false);
-        connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("HEAD");
-
-        return connection.getContentLengthLong();
     }
 
 }

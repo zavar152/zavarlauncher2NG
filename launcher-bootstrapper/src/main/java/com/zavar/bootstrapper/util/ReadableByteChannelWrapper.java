@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
-public class ReadableByteChannelWrapper implements ReadableByteChannel {
+public final class ReadableByteChannelWrapper implements ReadableByteChannel {
 
     private final ReadableByteChannel readableByteChannel;
     private final long fileSize;

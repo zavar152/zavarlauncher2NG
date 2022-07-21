@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>launcher</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
 
     <build>
         <plugins>
@@ -54,6 +54,33 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>com.zavar.zavarlauncher/com.zavar.zavarlauncher.Launcher</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.internetitem</groupId>
+                <artifactId>write-properties-file-maven-plugin</artifactId>
+                <version>1.0.1</version>
+                <executions>
+                    <execution>
+                        <id>one</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>write-properties-file</goal>
+                        </goals>
+                        <configuration>
+                            <filename>version.properties</filename>
+                            <properties>
+                                <property>
+                                    <name>launcherJavaVersion</name>
+                                    <value>${maven.compiler.target}</value>
+                                </property>
+                                <property>
+                                    <name>launcherVersion</name>
+                                    <value>${version}</value>
+                                </property>
+                            </properties>
                         </configuration>
                     </execution>
                 </executions>
