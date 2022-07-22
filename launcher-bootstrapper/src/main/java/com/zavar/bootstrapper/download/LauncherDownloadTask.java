@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.Properties;
 
 public class LauncherDownloadTask extends Task<Void> {
@@ -24,6 +26,8 @@ public class LauncherDownloadTask extends Task<Void> {
 
     @Override
     protected Void call() throws Exception {
+        NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
+        updateTitle("Checking for update");
         URL versionPath = new URL("jar:file:" + launcherFolder + "/launcher.jar!/version.properties");
         Properties properties = new Properties();
         properties.load(versionPath.openStream());
@@ -31,15 +35,17 @@ public class LauncherDownloadTask extends Task<Void> {
         Semver localVersion = new Semver(properties.getProperty("launcherVersion"));
         Semver remoteVersion = new Semver((String) remoteLauncherInfo.get("version"));
         if(localVersion.isLowerThan(remoteVersion)) {
+            updateTitle("Updating launcher");
             ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(new URL(url + remoteLauncherInfo.get("path")).openStream()), Util.contentLength(new URL(url + remoteLauncherInfo.get("path"))));
             rbc.getProgressProperty().addListener((observableValue, number, t1) -> {
                 updateProgress((double) observableValue.getValue(), 1);
+                updateMessage(nf.format(observableValue.getValue()));
             });
             FileOutputStream fileOutputStream = new FileOutputStream(launcherFolder + (String) remoteLauncherInfo.get("path"));
             fileOutputStream.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
             fileOutputStream.close();
         }
-
+        updateTitle("Launcher is ready");
         return null;
     }
 }

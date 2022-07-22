@@ -103,6 +103,11 @@ public class BootstrapController implements Initializable {
                     windowEvent.consume();
                 }
             });
+
+            jreDownloadTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
+                Util.showErrorDialog(t1, observableValue.getValue().toString());
+            });
+
             jreDownloadTask.setOnSucceeded(workerStateEvent -> {
                 Task<Void> launcherDownloadTask = new LauncherDownloadTask(launcherFolder, availableIp + config.getLauncherDownloadUrl());
                 launcherDownloadTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
@@ -110,6 +115,7 @@ public class BootstrapController implements Initializable {
                 });
                 info.textProperty().unbind();
                 progressInfo.textProperty().unbind();
+                bar.progressProperty().unbind();
                 info.textProperty().bind(launcherDownloadTask.titleProperty());
                 progressInfo.textProperty().bind(launcherDownloadTask.messageProperty());
                 bar.progressProperty().bind(launcherDownloadTask.progressProperty());

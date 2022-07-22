@@ -1,5 +1,6 @@
 package com.zavar.bootstrapper.util;
 
+import com.zavar.bootstrapper.Bootstrapper;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
@@ -43,6 +44,8 @@ public class Util {
     public static void showErrorDialog(Throwable t1, String title) {
         t1.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR, title);
+        if(Bootstrapper.getStage() != null)
+            alert.initOwner(Bootstrapper.getStage());
         alert.setTitle("Bootstrapper error");
         TextArea textArea = new TextArea(ExceptionUtils.getStackTrace(t1));
         textArea.setEditable(false);

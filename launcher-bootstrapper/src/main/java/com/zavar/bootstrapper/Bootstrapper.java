@@ -6,7 +6,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
@@ -17,6 +16,7 @@ import java.util.Objects;
 public class Bootstrapper extends Application {
 
     private static CloseEvent onCloseEvent;
+    private static Stage stage;
 
     public static void main(String[] args) {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
@@ -27,8 +27,10 @@ public class Bootstrapper extends Application {
 
     @Override
     public void start(Stage splashStage) throws IOException {
+        stage = splashStage;
         splashStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/img/icon.png"))));
-        splashStage.initStyle(StageStyle.UNDECORATED);
+        //splashStage.initStyle(StageStyle.UNDECORATED);
+        splashStage.setResizable(false);
         Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxml/bootstrap.fxml"))), 300, 50);
         JMetro jMetro = new JMetro(Style.LIGHT);
         jMetro.setScene(scene);
@@ -41,6 +43,10 @@ public class Bootstrapper extends Application {
 
     public static void setOnCloseEvent(CloseEvent onCloseEvent) {
         Bootstrapper.onCloseEvent = onCloseEvent;
+    }
+
+    public static Stage getStage() {
+        return stage;
     }
 
     @FunctionalInterface
