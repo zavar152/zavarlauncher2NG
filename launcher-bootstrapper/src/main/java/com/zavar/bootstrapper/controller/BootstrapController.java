@@ -8,17 +8,16 @@ import com.zavar.bootstrapper.config.BootstrapConfig;
 import com.zavar.bootstrapper.download.JreDownloadTask;
 import com.zavar.bootstrapper.download.LauncherDownloadTask;
 import com.zavar.bootstrapper.java.JreManager;
+import com.zavar.bootstrapper.util.Util;
 import com.zavar.common.finder.JavaFinder;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
-import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 
@@ -87,11 +86,7 @@ public class BootstrapController implements Initializable {
                 System.out.println(jreToInstall);
                 FileUtils.forceDeleteOnExit(tempFolder.toFile());
             } catch (IOException e) {
-                Alert alert = new Alert(Alert.AlertType.WARNING, e.getMessage());
-                alert.setTitle("Bootstrapper error");
-                alert.initStyle(StageStyle.UNDECORATED);
-                e.printStackTrace();
-                alert.showAndWait();
+                Util.showErrorDialog(e, e.getMessage());
                 Platform.exit();
             }
 
@@ -111,7 +106,7 @@ public class BootstrapController implements Initializable {
             jreDownloadTask.setOnSucceeded(workerStateEvent -> {
                 Task<Void> launcherDownloadTask = new LauncherDownloadTask(launcherFolder, availableIp + config.getLauncherDownloadUrl());
                 launcherDownloadTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
-                    System.out.println(t1);
+                    Util.showErrorDialog(t1, observableValue.getValue().toString());
                 });
                 info.textProperty().unbind();
                 progressInfo.textProperty().unbind();
@@ -129,15 +124,12 @@ public class BootstrapController implements Initializable {
             });
             bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
             info.setText("Loading launcher...");
-            if(javas.stream().anyMatch(java -> java.version() >= Integer.parseInt(config.getLauncherJavaVersion()))) {
+            if(jreManager.isJreExists(Integer.parseInt(config.getLauncherJavaVersion()))) {
                 System.out.println("launching...");
-            } else if(jreManager.isJreExists(Integer.parseInt(config.getLauncherJavaVersion()))) {
+            } else if(javas.stream().anyMatch(java -> java.version() >= Integer.parseInt(config.getLauncherJavaVersion()))) {
 
             } else {
-                Alert alert = new Alert(Alert.AlertType.WARNING, "Java " + config.getLauncherJavaVersion() + " couldn't be found");
-                alert.setTitle("Bootstrapper error");
-                alert.initStyle(StageStyle.UNDECORATED);
-                alert.showAndWait();
+                Util.showWarningDialog("Java " + config.getLauncherJavaVersion() + " couldn't be found");
                 Platform.exit();
                 System.exit(0);
             }

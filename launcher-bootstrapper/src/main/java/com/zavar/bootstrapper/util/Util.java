@@ -1,5 +1,11 @@
 package com.zavar.bootstrapper.util;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.stage.StageStyle;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,4 +39,30 @@ public class Util {
 
         return connection.getContentLengthLong();
     }
+
+    public static void showErrorDialog(Throwable t1, String title) {
+        t1.printStackTrace();
+        Alert alert = new Alert(Alert.AlertType.ERROR, title);
+        alert.setTitle("Bootstrapper error");
+        TextArea textArea = new TextArea(ExceptionUtils.getStackTrace(t1));
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setMaxWidth(Double.MAX_VALUE);
+        textArea.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(textArea, Priority.ALWAYS);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+        GridPane expContent = new GridPane();
+        expContent.setMaxWidth(Double.MAX_VALUE);
+        expContent.add(textArea, 0, 1);
+        alert.getDialogPane().setExpandableContent(expContent);
+        alert.showAndWait();
+    }
+
+    public static void showWarningDialog(String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING, message);
+        alert.setTitle("Bootstrapper warning");
+        alert.initStyle(StageStyle.UNDECORATED);
+        alert.showAndWait();
+    }
+
 }

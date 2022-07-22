@@ -1,5 +1,6 @@
 package com.zavar.bootstrapper;
 
+import com.zavar.bootstrapper.util.Util;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -18,6 +19,9 @@ public class Bootstrapper extends Application {
     private static CloseEvent onCloseEvent;
 
     public static void main(String[] args) {
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            Util.showErrorDialog(e, e.getMessage());
+        });
         launch(args);
     }
 
