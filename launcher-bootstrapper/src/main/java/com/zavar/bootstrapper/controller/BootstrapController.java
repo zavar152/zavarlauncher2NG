@@ -6,7 +6,8 @@ import com.github.plushaze.traynotification.notification.TrayNotification;
 import com.zavar.bootstrapper.Bootstrapper;
 import com.zavar.bootstrapper.config.BootstrapConfig;
 import com.zavar.bootstrapper.download.JreDownloadTask;
-import com.zavar.bootstrapper.download.LauncherUpdateTask;
+import com.zavar.bootstrapper.launcher.LauncherStartTask;
+import com.zavar.bootstrapper.launcher.LauncherUpdateTask;
 import com.zavar.bootstrapper.java.JreManager;
 import com.zavar.bootstrapper.util.Util;
 import com.zavar.common.finder.JavaFinder;
@@ -130,28 +131,30 @@ public class BootstrapController implements Initializable {
                 Util.showErrorDialog(t1, observableValue.getValue().toString());
             });
 
+            launcherUpdateTask.setOnSucceeded(workerStateEvent -> {
+                launch();
+            });
+
             executorService.submit(jreDownloadTask);
         } else {
             Bootstrapper.setOnCloseEvent((windowEvent) -> {
                 Platform.exit();
                 System.exit(0);
             });
-            bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
-            info.setText("Loading launcher");
-
+            launch();
         }
     }
 
     private void launch() {
-//        if (jreManager.isJreExists(Integer.parseInt(config.getLauncherJavaVersion()))) {
-//            System.out.println("launching...");
-//        } else if (javas.stream().anyMatch(java -> java.version() >= Integer.parseInt(config.getLauncherJavaVersion()))) {
-//
-//        } else {
-//            Util.showWarningDialog("Java " + config.getLauncherJavaVersion() + " couldn't be found");
-//            Platform.exit();
-//            System.exit(0);
-//        }
+        LauncherStartTask launcherStartTask = new LauncherStartTask(launcherFolder, javas, jreManager);
+        launcherStartTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
+            Util.showErrorDialog(t1, observableValue.getValue().toString());
+        });
+        launcherStartTask.setOnSucceeded(workerStateEvent -> {
+            Platform.exit();
+            System.exit(0);
+        });
+        executorService.submit(launcherStartTask);
     }
 
 }

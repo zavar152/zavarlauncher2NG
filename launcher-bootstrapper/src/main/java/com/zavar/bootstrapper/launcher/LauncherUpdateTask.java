@@ -1,4 +1,4 @@
-package com.zavar.bootstrapper.download;
+package com.zavar.bootstrapper.launcher;
 
 import com.vdurmont.semver4j.Semver;
 import com.zavar.bootstrapper.util.ReadableByteChannelWrapper;
