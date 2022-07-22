@@ -141,6 +141,8 @@ public class BootstrapController implements Initializable {
                 Platform.exit();
                 System.exit(0);
             });
+            info.setText("Starting");
+            bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
             launch();
         }
     }

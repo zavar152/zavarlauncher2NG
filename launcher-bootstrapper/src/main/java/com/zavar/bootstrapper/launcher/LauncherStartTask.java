@@ -44,7 +44,7 @@ public class LauncherStartTask extends Task<Void> {
             jarConn.getInputStream().close();
 
             int launcherJavaVersion = Integer.parseInt(properties.getProperty("launcherJavaVersion"));
-            if (jreManager.isJreExists(launcherJavaVersion)) {
+            if (jreManager != null && jreManager.isJreExists(launcherJavaVersion)) {
                 ProcessBuilder processBuilder = new ProcessBuilder(jreManager.getJreFolderPath().resolve(String.valueOf(launcherJavaVersion)).resolve("bin").resolve("java.exe").toString(), "-jar", launcherFolder.resolve("launcher.jar").toString());
                 processBuilder.start();
             } else if (javas.stream().anyMatch(java -> java.version() >= launcherJavaVersion)) {
