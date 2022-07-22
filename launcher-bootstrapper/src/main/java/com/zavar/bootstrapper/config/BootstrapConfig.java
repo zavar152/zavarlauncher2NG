@@ -8,10 +8,8 @@ public class BootstrapConfig {
 
     private final List<String> ips;
     private final Properties bootstrapProperties = new Properties();
-    private final Properties launcherProperties = new Properties();
     private Long version = null;
     private String launcherDownloadUrl = null;
-    private String launcherJavaVersion = null;
     private String jreDownloadUrl = null;
     private String mainIp = null;
     private String availableIp = null;
@@ -19,7 +17,6 @@ public class BootstrapConfig {
     public BootstrapConfig() throws IOException {
         ips = new ArrayList<>();
         bootstrapProperties.load(Objects.requireNonNull(getClass().getResourceAsStream("/config/bootstrap.properties")));
-        launcherProperties.load(Objects.requireNonNull(getClass().getResourceAsStream("/config/launcher.properties")));
     }
 
     public List<String> getAllIps() {
@@ -95,12 +92,6 @@ public class BootstrapConfig {
         if(Objects.isNull(launcherDownloadUrl))
             launcherDownloadUrl = requireNonEmpty(bootstrapProperties.getProperty("launcherDownloadUrl"), "Launcher url is missing");
         return launcherDownloadUrl;
-    }
-
-    public String getLauncherJavaVersion() {
-        if(Objects.isNull(launcherJavaVersion))
-            launcherJavaVersion = requireNonEmpty(launcherProperties.getProperty("launcherJavaVersion"), "Launcher java version is missing");
-        return launcherJavaVersion;
     }
 
     private static <T> T requireNonEmpty(T obj, String message) {

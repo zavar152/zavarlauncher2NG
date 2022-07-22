@@ -108,8 +108,8 @@ public class BootstrapController implements Initializable {
                 Util.showErrorDialog(t1, observableValue.getValue().toString());
             });
 
+            final Task<Void> launcherUpdateTask = new LauncherUpdateTask(launcherFolder, availableIp + config.getLauncherDownloadUrl());
             jreDownloadTask.setOnSucceeded(workerStateEvent -> {
-                Task<Void> launcherUpdateTask = new LauncherUpdateTask(launcherFolder, availableIp + config.getLauncherDownloadUrl());
                 launcherUpdateTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
                     Util.showErrorDialog(t1, observableValue.getValue().toString());
                 });
@@ -129,17 +129,21 @@ public class BootstrapController implements Initializable {
                 System.exit(0);
             });
             bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
-            info.setText("Loading launcher...");
-            if(jreManager.isJreExists(Integer.parseInt(config.getLauncherJavaVersion()))) {
-                System.out.println("launching...");
-            } else if(javas.stream().anyMatch(java -> java.version() >= Integer.parseInt(config.getLauncherJavaVersion()))) {
+            info.setText("Loading launcher");
 
-            } else {
-                Util.showWarningDialog("Java " + config.getLauncherJavaVersion() + " couldn't be found");
-                Platform.exit();
-                System.exit(0);
-            }
         }
+    }
+
+    private void launch() {
+//        if (jreManager.isJreExists(Integer.parseInt(config.getLauncherJavaVersion()))) {
+//            System.out.println("launching...");
+//        } else if (javas.stream().anyMatch(java -> java.version() >= Integer.parseInt(config.getLauncherJavaVersion()))) {
+//
+//        } else {
+//            Util.showWarningDialog("Java " + config.getLauncherJavaVersion() + " couldn't be found");
+//            Platform.exit();
+//            System.exit(0);
+//        }
     }
 
 }

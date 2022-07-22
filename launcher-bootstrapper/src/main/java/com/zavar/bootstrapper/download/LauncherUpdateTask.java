@@ -35,28 +35,34 @@ public class LauncherUpdateTask extends Task<Void> {
         File launcherFile = FileUtils.getFile(launcherFolder + "/launcher.jar");
         if (launcherFile.exists()) {
             updateTitle("Checking for update");
-            URL versionPath = new URL("jar:file:" + launcherFolder + "/launcher.jar!/version.properties");
-            Properties properties = new Properties();
-            JarURLConnection jarConn = (JarURLConnection) versionPath.openConnection();
-            jarConn.setUseCaches(false);
-            JarFile jarFile = jarConn.getJarFile();
-            properties.load(jarFile.getInputStream(jarConn.getJarEntry()));
-            jarConn.getInputStream().close();
             JSONObject remoteLauncherInfo = Util.readJsonFromUrl(url + "/latest.json");
-            Semver localVersion = new Semver(properties.getProperty("launcherVersion"));
+            Semver localVersion;
             Semver remoteVersion = new Semver((String) remoteLauncherInfo.get("version"));
+            if(launcherFile.length() != Util.contentLength(new URL(url + remoteLauncherInfo.get("path")))) {
+                localVersion = new Semver("0.0.0");
+            } else {
+                URL versionPath = new URL("jar:file:" + launcherFolder + "/launcher.jar!/version.properties");
+                Properties properties = new Properties();
+                JarURLConnection jarConn = (JarURLConnection) versionPath.openConnection();
+                jarConn.setUseCaches(false);
+                JarFile jarFile = jarConn.getJarFile();
+                properties.load(jarFile.getInputStream(jarConn.getJarEntry()));
+                jarConn.getInputStream().close();
+                localVersion = new Semver(properties.getProperty("launcherVersion"));
+            }
             if (localVersion.isLowerThan(remoteVersion)) {
                 FileUtils.moveFile(launcherFile, FileUtils.getFile(launcherFolder + "/old.jar"));
                 updateTitle("Updating launcher");
                 downloadLauncher(nf, launcherFile, remoteLauncherInfo);
                 FileUtils.delete(FileUtils.getFile(launcherFolder + "/old.jar"));
             }
+            updateTitle("Launcher is ready");
         } else {
             JSONObject remoteLauncherInfo = Util.readJsonFromUrl(url + "/latest.json");
             updateTitle("Downloading launcher");
             downloadLauncher(nf, launcherFile, remoteLauncherInfo);
+            updateTitle("Launcher is ready");
         }
-        updateTitle("Launcher is ready");
         return null;
     }
 

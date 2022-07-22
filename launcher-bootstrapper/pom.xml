@@ -49,29 +49,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>com.internetitem</groupId>
-                <artifactId>write-properties-file-maven-plugin</artifactId>
-                <version>1.0.1</version>
-                <executions>
-                    <execution>
-                        <id>one</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>write-properties-file</goal>
-                        </goals>
-                        <configuration>
-                            <filename>config/launcher.properties</filename>
-                            <properties>
-                                <property>
-                                    <name>launcherJavaVersion</name>
-                                    <value>${maven.compiler.target}</value>
-                                </property>
-                            </properties>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
