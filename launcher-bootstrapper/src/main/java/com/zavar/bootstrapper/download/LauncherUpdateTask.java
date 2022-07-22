@@ -4,6 +4,7 @@ import com.vdurmont.semver4j.Semver;
 import com.zavar.bootstrapper.util.ReadableByteChannelWrapper;
 import com.zavar.bootstrapper.util.Util;
 import javafx.concurrent.Task;
+import net.lingala.zip4j.core.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
@@ -33,12 +34,14 @@ public class LauncherUpdateTask extends Task<Void> {
     protected Void call() throws Exception {
         NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
         File launcherFile = FileUtils.getFile(launcherFolder + "/launcher.jar");
+        ZipFile launcherJarFile = new ZipFile(launcherFile);
         if (launcherFile.exists()) {
             updateTitle("Checking for update");
             JSONObject remoteLauncherInfo = Util.readJsonFromUrl(url + "/latest.json");
             Semver localVersion;
             Semver remoteVersion = new Semver((String) remoteLauncherInfo.get("version"));
-            if(launcherFile.length() != Util.contentLength(new URL(url + remoteLauncherInfo.get("path")))) {
+            long remoteSize = Util.contentLength(new URL(url + remoteLauncherInfo.get("path")));
+            if(!launcherJarFile.isValidZipFile()) {
                 localVersion = new Semver("0.0.0");
             } else {
                 URL versionPath = new URL("jar:file:" + launcherFolder + "/launcher.jar!/version.properties");
@@ -53,21 +56,40 @@ public class LauncherUpdateTask extends Task<Void> {
             if (localVersion.isLowerThan(remoteVersion)) {
                 FileUtils.moveFile(launcherFile, FileUtils.getFile(launcherFolder + "/old.jar"));
                 updateTitle("Updating launcher");
-                downloadLauncher(nf, launcherFile, remoteLauncherInfo);
+                downloadLauncher(nf, launcherFile, remoteLauncherInfo, remoteSize);
                 FileUtils.delete(FileUtils.getFile(launcherFolder + "/old.jar"));
             }
-            updateTitle("Launcher is ready");
+            if(launcherJarFile.isValidZipFile() && launcherFile.length() == remoteSize) {
+                updateTitle("Launcher is ready");
+            } else {
+                updateMessage("");
+                updateProgress(0.0, 1.0);
+                updateTitle("Launcher is corrupted, try again");
+                Thread.sleep(5);
+                updateProgress(-1.0, 1.0);
+            }
+
         } else {
             JSONObject remoteLauncherInfo = Util.readJsonFromUrl(url + "/latest.json");
+            long remoteSize = Util.contentLength(new URL(url + remoteLauncherInfo.get("path")));
             updateTitle("Downloading launcher");
-            downloadLauncher(nf, launcherFile, remoteLauncherInfo);
-            updateTitle("Launcher is ready");
+            downloadLauncher(nf, launcherFile, remoteLauncherInfo, remoteSize);
+            if(launcherJarFile.isValidZipFile() && launcherFile.length() == remoteSize) {
+                updateTitle("Launcher is ready");
+            } else {
+                updateMessage("");
+                updateProgress(0.0, 1.0);
+                updateTitle("Launcher is corrupted, try again");
+                Thread.sleep(5);
+                updateProgress(-1.0, 1.0);
+
+            }
         }
         return null;
     }
 
-    private void downloadLauncher(NumberFormat nf, File launcherFile, JSONObject remoteLauncherInfo) throws IOException {
-        ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(new URL(url + remoteLauncherInfo.get("path")).openStream()), Util.contentLength(new URL(url + remoteLauncherInfo.get("path"))));
+    private void downloadLauncher(NumberFormat nf, File launcherFile, JSONObject remoteLauncherInfo, long remoteSize) throws IOException {
+        ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(new URL(url + remoteLauncherInfo.get("path")).openStream()), remoteSize);
         rbc.getProgressProperty().addListener((observableValue, number, t1) -> {
             updateProgress((double) observableValue.getValue(), 1);
             updateMessage(nf.format(observableValue.getValue()));

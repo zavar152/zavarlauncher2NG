@@ -68,7 +68,6 @@ public class BootstrapController implements Initializable {
             tray.setTrayIcon(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/img/icon.png"))));
             tray.setAnimation(Animations.POPUP);
             tray.showAndDismiss(Duration.millis(3500));
-            e.printStackTrace();
         }
     }
     @Override
@@ -110,8 +109,13 @@ public class BootstrapController implements Initializable {
 
             final Task<Void> launcherUpdateTask = new LauncherUpdateTask(launcherFolder, availableIp + config.getLauncherDownloadUrl());
             jreDownloadTask.setOnSucceeded(workerStateEvent -> {
-                launcherUpdateTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
-                    Util.showErrorDialog(t1, observableValue.getValue().toString());
+                Bootstrapper.setOnCloseEvent((windowEvent) -> {
+                    if(!launcherUpdateTask.isRunning()) {
+                        Platform.exit();
+                        System.exit(0);
+                    } else {
+                        windowEvent.consume();
+                    }
                 });
                 info.textProperty().unbind();
                 progressInfo.textProperty().unbind();
@@ -120,6 +124,10 @@ public class BootstrapController implements Initializable {
                 progressInfo.textProperty().bind(launcherUpdateTask.messageProperty());
                 bar.progressProperty().bind(launcherUpdateTask.progressProperty());
                 executorService.submit(launcherUpdateTask);
+            });
+
+            launcherUpdateTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
+                Util.showErrorDialog(t1, observableValue.getValue().toString());
             });
 
             executorService.submit(jreDownloadTask);
