@@ -6,7 +6,7 @@ import com.github.plushaze.traynotification.notification.TrayNotification;
 import com.zavar.bootstrapper.Bootstrapper;
 import com.zavar.bootstrapper.config.BootstrapConfig;
 import com.zavar.bootstrapper.download.JreDownloadTask;
-import com.zavar.bootstrapper.download.LauncherDownloadTask;
+import com.zavar.bootstrapper.download.LauncherUpdateTask;
 import com.zavar.bootstrapper.java.JreManager;
 import com.zavar.bootstrapper.util.Util;
 import com.zavar.common.finder.JavaFinder;
@@ -109,17 +109,17 @@ public class BootstrapController implements Initializable {
             });
 
             jreDownloadTask.setOnSucceeded(workerStateEvent -> {
-                Task<Void> launcherDownloadTask = new LauncherDownloadTask(launcherFolder, availableIp + config.getLauncherDownloadUrl());
-                launcherDownloadTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
+                Task<Void> launcherUpdateTask = new LauncherUpdateTask(launcherFolder, availableIp + config.getLauncherDownloadUrl());
+                launcherUpdateTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
                     Util.showErrorDialog(t1, observableValue.getValue().toString());
                 });
                 info.textProperty().unbind();
                 progressInfo.textProperty().unbind();
                 bar.progressProperty().unbind();
-                info.textProperty().bind(launcherDownloadTask.titleProperty());
-                progressInfo.textProperty().bind(launcherDownloadTask.messageProperty());
-                bar.progressProperty().bind(launcherDownloadTask.progressProperty());
-                executorService.submit(launcherDownloadTask);
+                info.textProperty().bind(launcherUpdateTask.titleProperty());
+                progressInfo.textProperty().bind(launcherUpdateTask.messageProperty());
+                bar.progressProperty().bind(launcherUpdateTask.progressProperty());
+                executorService.submit(launcherUpdateTask);
             });
 
             executorService.submit(jreDownloadTask);
