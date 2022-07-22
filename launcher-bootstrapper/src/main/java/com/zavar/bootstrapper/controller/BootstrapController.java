@@ -99,6 +99,7 @@ public class BootstrapController implements Initializable {
 
             info.textProperty().bind(jreDownloadTask.titleProperty());
             progressInfo.textProperty().bind(jreDownloadTask.messageProperty());
+            bar.progressProperty().bind(jreDownloadTask.progressProperty());
             Bootstrapper.setOnCloseEvent((windowEvent) -> {
                 if(!jreDownloadTask.isRunning()) {
                     Platform.exit();

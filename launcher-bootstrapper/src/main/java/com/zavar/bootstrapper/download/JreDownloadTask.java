@@ -26,14 +26,12 @@ public class JreDownloadTask extends Task<Void> {
     private final Path tempFolder;
     private final Path jreFolder;
     private final JreManager jreManager;
-    private final ProgressBar bar;
 
     public JreDownloadTask(List<Integer> jreToInstall, Path tempFolder, Path jreFolder, JreManager jreManager, ProgressBar bar) {
         this.jreToInstall = jreToInstall;
         this.tempFolder = tempFolder;
         this.jreFolder = jreFolder;
         this.jreManager = jreManager;
-        this.bar = bar;
     }
 
     @Override
@@ -48,7 +46,9 @@ public class JreDownloadTask extends Task<Void> {
                 }
                 if(!archiveFile.exists()) {
                     ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(jreManager.getDownloadUrlForVersion(i).openStream()), Util.contentLength(jreManager.getDownloadUrlForVersion(i)));
-                    bar.progressProperty().bind(rbc.getProgressProperty());
+                    rbc.getProgressProperty().addListener((observableValue, number, t1) -> {
+                        updateProgress((double) observableValue.getValue(), 1);
+                    });
                     rbc.getProgressProperty().addListener((observableValue, number, t1) -> updateMessage(nf.format(observableValue.getValue())));
                     updateTitle("Downloading java " + i);
                     if(!tempFolder.toFile().exists())
@@ -57,7 +57,6 @@ public class JreDownloadTask extends Task<Void> {
                     FileOutputStream fileOutputStream = new FileOutputStream(archiveFile);
                     fileOutputStream.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
                     fileOutputStream.close();
-                    bar.progressProperty().unbind();
                 }
                 if(isCancelled()) {
                     break;
@@ -69,7 +68,7 @@ public class JreDownloadTask extends Task<Void> {
                 toUnzipFile.extractAll(jreFolder + "/" + i);
                 while (progressMonitor.getState() == ProgressMonitor.STATE_BUSY) {
                     updateMessage(nf.format(progressMonitor.getPercentDone()/100.0));
-                    bar.setProgress(progressMonitor.getPercentDone()/100.0);
+                    updateProgress(progressMonitor.getPercentDone()/100.0, 1);
                 }
                 FileUtils.delete(archiveFile);
             }
