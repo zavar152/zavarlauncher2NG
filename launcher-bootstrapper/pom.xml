@@ -5,11 +5,12 @@
     <parent>
         <artifactId>zavarlauncher</artifactId>
         <groupId>com.zavar</groupId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>launcher-bootstrapper</artifactId>
+    <version>1.0.0</version>
     <dependencies>
         <dependency>
             <groupId>org.jetbrains</groupId>
@@ -20,7 +21,7 @@
         <dependency>
             <groupId>com.zavar</groupId>
             <artifactId>launcher-common</artifactId>
-            <version>2.0.0-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 
@@ -36,6 +37,26 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.zavar.bootstrapper.BootstrapperJar</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.6</version>
@@ -49,6 +70,31 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>com.internetitem</groupId>
+                <artifactId>write-properties-file-maven-plugin</artifactId>
+                <version>1.0.1</version>
+                <executions>
+                    <execution>
+                        <id>one</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>write-properties-file</goal>
+                        </goals>
+                        <configuration>
+                            <filename>version.properties</filename>
+                            <properties>
+                                <property>
+                                    <name>bootstrapperVersion</name>
+                                    <value>${version}</value>
+                                </property>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 

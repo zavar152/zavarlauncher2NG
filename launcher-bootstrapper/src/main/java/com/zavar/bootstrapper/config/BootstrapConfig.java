@@ -1,18 +1,26 @@
 package com.zavar.bootstrapper.config;
 
+import com.vdurmont.semver4j.Semver;
+
 import java.io.IOException;
-import java.net.*;
-import java.util.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
 
 public class BootstrapConfig {
 
     private final List<String> ips;
     private final Properties bootstrapProperties = new Properties();
-    private Long version = null;
+    private Semver version = null;
     private String launcherDownloadUrl = null;
     private String latestLauncherUrl = null;
     private String jreDownloadUrl = null;
     private String jreListUrl = null;
+    private String bootstrapDownloadUrl = null;
+    private String latestBootstrapUrl = null;
     private String mainIp = null;
     private String availableIp = null;
 
@@ -72,9 +80,12 @@ public class BootstrapConfig {
         }
     }
 
-    public Long getBootstrapVersion() {
-        if(Objects.isNull(version))
-            version = Long.parseLong(requireNonEmpty(bootstrapProperties.getProperty("version"), "Version is missing"));
+    public Semver getBootstrapVersion() throws IOException {
+        if(Objects.isNull(version)) {
+            Properties vProps = new Properties();
+            vProps.load(Objects.requireNonNull(getClass().getResourceAsStream("/version.properties")));
+            version = new Semver(requireNonEmpty(vProps.getProperty("bootstrapperVersion"), "Version is missing"));
+        }
         return version;
     }
 
@@ -100,6 +111,18 @@ public class BootstrapConfig {
         if(Objects.isNull(latestLauncherUrl))
             latestLauncherUrl = requireNonEmpty(bootstrapProperties.getProperty("latestLauncherUrl"), "Latest file url is missing");
         return latestLauncherUrl;
+    }
+
+    public String getBootstrapDownloadUrl() {
+        if(Objects.isNull(bootstrapDownloadUrl))
+            bootstrapDownloadUrl = requireNonEmpty(bootstrapProperties.getProperty("bootstrapDownloadUrl"), "Bootstrap url is missing");
+        return bootstrapDownloadUrl;
+    }
+
+    public String getLatestBootstrapUrl() {
+        if(Objects.isNull(latestBootstrapUrl))
+            latestBootstrapUrl = requireNonEmpty(bootstrapProperties.getProperty("latestBootstrapUrl"), "Latest file url is missing");
+        return latestBootstrapUrl;
     }
 
     public String getJreListUrl() {

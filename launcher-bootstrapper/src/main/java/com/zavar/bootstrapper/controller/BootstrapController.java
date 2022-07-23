@@ -5,10 +5,11 @@ import com.github.plushaze.traynotification.notification.Notifications;
 import com.github.plushaze.traynotification.notification.TrayNotification;
 import com.zavar.bootstrapper.Bootstrapper;
 import com.zavar.bootstrapper.config.BootstrapConfig;
-import com.zavar.bootstrapper.download.JreDownloadTask;
+import com.zavar.bootstrapper.java.JreDownloadTask;
+import com.zavar.bootstrapper.java.JreManager;
+import com.zavar.bootstrapper.launcher.BootstrapperUpdateTask;
 import com.zavar.bootstrapper.launcher.LauncherStartTask;
 import com.zavar.bootstrapper.launcher.LauncherUpdateTask;
-import com.zavar.bootstrapper.java.JreManager;
 import com.zavar.bootstrapper.util.Util;
 import com.zavar.common.finder.JavaFinder;
 import javafx.application.Platform;
@@ -74,10 +75,28 @@ public class BootstrapController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         if (!isOffline) {
-            final List<Integer> jreToInstall = new ArrayList<>();
             bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
-            info.setText("Loading");
 
+            BootstrapperUpdateTask bootstrapperUpdateTask = null;
+            try {
+                bootstrapperUpdateTask = new BootstrapperUpdateTask(config.getBootstrapVersion(), availableIp + config.getBootstrapDownloadUrl(), config.getLatestBootstrapUrl());
+            } catch (IOException e) {
+                Util.showErrorDialog(e, e.getMessage());
+                Platform.exit();
+                System.exit(0);
+            }
+
+            info.textProperty().bind(bootstrapperUpdateTask.titleProperty());
+
+            bootstrapperUpdateTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
+                Util.showWarningDialog(t1.getMessage());
+                Platform.exit();
+                System.exit(0);
+            });
+
+            final List<Integer> jreToInstall = new ArrayList<>();
+            info.textProperty().unbind();
+            info.setText("Loading");
             try {
                 jreManager.getSupportedVersions().forEach(v -> {
                     if (!jreManager.isJreExists(v) && javas.stream().noneMatch(java -> java.version() == v))
@@ -88,9 +107,10 @@ public class BootstrapController implements Initializable {
             } catch (IOException e) {
                 Util.showErrorDialog(e, e.getMessage());
                 Platform.exit();
+                System.exit(0);
             }
 
-            final Task<Void> jreDownloadTask = new JreDownloadTask(jreToInstall, tempFolder, jreFolder, jreManager, bar);
+            final Task<Void> jreDownloadTask = new JreDownloadTask(jreToInstall, tempFolder, jreFolder, jreManager);
 
             info.textProperty().bind(jreDownloadTask.titleProperty());
             progressInfo.textProperty().bind(jreDownloadTask.messageProperty());
@@ -135,7 +155,11 @@ public class BootstrapController implements Initializable {
                 launch();
             });
 
-            executorService.submit(jreDownloadTask);
+            bootstrapperUpdateTask.setOnSucceeded(workerStateEvent -> {
+                executorService.submit(jreDownloadTask);
+            });
+
+            executorService.submit(bootstrapperUpdateTask);
         } else {
             Bootstrapper.setOnCloseEvent((windowEvent) -> {
                 Platform.exit();

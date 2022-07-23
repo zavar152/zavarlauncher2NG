@@ -1,10 +1,8 @@
-package com.zavar.bootstrapper.download;
+package com.zavar.bootstrapper.java;
 
-import com.zavar.bootstrapper.java.JreManager;
 import com.zavar.bootstrapper.util.ReadableByteChannelWrapper;
 import com.zavar.bootstrapper.util.Util;
 import javafx.concurrent.Task;
-import javafx.scene.control.ProgressBar;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.io.FileUtils;
@@ -24,7 +22,7 @@ public class JreDownloadTask extends Task<Void> {
     private final Path jreFolder;
     private final JreManager jreManager;
 
-    public JreDownloadTask(List<Integer> jreToInstall, Path tempFolder, Path jreFolder, JreManager jreManager, ProgressBar bar) {
+    public JreDownloadTask(List<Integer> jreToInstall, Path tempFolder, Path jreFolder, JreManager jreManager) {
         this.jreToInstall = jreToInstall;
         this.tempFolder = tempFolder;
         this.jreFolder = jreFolder;
