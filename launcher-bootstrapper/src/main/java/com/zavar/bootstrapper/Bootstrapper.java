@@ -29,7 +29,6 @@ public class Bootstrapper extends Application {
     public void start(Stage splashStage) throws IOException {
         stage = splashStage;
         splashStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/img/icon.png"))));
-        //splashStage.initStyle(StageStyle.UNDECORATED);
         splashStage.setResizable(false);
         Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxml/bootstrap.fxml"))), 300, 50);
         JMetro jMetro = new JMetro(Style.LIGHT);

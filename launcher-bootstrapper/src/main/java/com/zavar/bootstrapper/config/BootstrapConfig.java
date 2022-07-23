@@ -10,7 +10,9 @@ public class BootstrapConfig {
     private final Properties bootstrapProperties = new Properties();
     private Long version = null;
     private String launcherDownloadUrl = null;
+    private String latestLauncherUrl = null;
     private String jreDownloadUrl = null;
+    private String jreListUrl = null;
     private String mainIp = null;
     private String availableIp = null;
 
@@ -92,6 +94,18 @@ public class BootstrapConfig {
         if(Objects.isNull(launcherDownloadUrl))
             launcherDownloadUrl = requireNonEmpty(bootstrapProperties.getProperty("launcherDownloadUrl"), "Launcher url is missing");
         return launcherDownloadUrl;
+    }
+
+    public String getLatestLauncherUrl() {
+        if(Objects.isNull(latestLauncherUrl))
+            latestLauncherUrl = requireNonEmpty(bootstrapProperties.getProperty("latestLauncherUrl"), "Latest file url is missing");
+        return latestLauncherUrl;
+    }
+
+    public String getJreListUrl() {
+        if(Objects.isNull(jreListUrl))
+            jreListUrl = requireNonEmpty(bootstrapProperties.getProperty("jreListUrl"), "Jre list url is missing");
+        return jreListUrl;
     }
 
     private static <T> T requireNonEmpty(T obj, String message) {

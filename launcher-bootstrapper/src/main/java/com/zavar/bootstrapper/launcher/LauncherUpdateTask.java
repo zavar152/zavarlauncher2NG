@@ -24,10 +24,12 @@ public class LauncherUpdateTask extends Task<Void> {
 
     private final Path launcherFolder;
     private final String url;
+    private final String launcherLatestUrl;
 
-    public LauncherUpdateTask(Path launcherFolder, String url) {
+    public LauncherUpdateTask(Path launcherFolder, String launcherUrl, String launcherLatestUrl) {
         this.launcherFolder = launcherFolder;
-        this.url = url;
+        this.url = launcherUrl;
+        this.launcherLatestUrl = launcherLatestUrl;
     }
 
     @Override
@@ -37,7 +39,7 @@ public class LauncherUpdateTask extends Task<Void> {
         ZipFile launcherJarFile = new ZipFile(launcherFile);
         if (launcherFile.exists()) {
             updateTitle("Checking for update");
-            JSONObject remoteLauncherInfo = Util.readJsonFromUrl(url + "/latest.json");
+            JSONObject remoteLauncherInfo = Util.readJsonFromUrl(url + launcherLatestUrl);
             Semver localVersion;
             Semver remoteVersion = new Semver((String) remoteLauncherInfo.get("version"));
             long remoteSize = Util.contentLength(new URL(url + remoteLauncherInfo.get("path")));
@@ -70,7 +72,7 @@ public class LauncherUpdateTask extends Task<Void> {
             }
 
         } else {
-            JSONObject remoteLauncherInfo = Util.readJsonFromUrl(url + "/latest.json");
+            JSONObject remoteLauncherInfo = Util.readJsonFromUrl(url + launcherLatestUrl);
             long remoteSize = Util.contentLength(new URL(url + remoteLauncherInfo.get("path")));
             updateTitle("Downloading launcher");
             downloadLauncher(nf, launcherFile, remoteLauncherInfo, remoteSize);

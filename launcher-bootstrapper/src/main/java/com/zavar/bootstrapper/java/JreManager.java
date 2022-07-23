@@ -15,10 +15,12 @@ public class JreManager {
 
     private final URL downloadUrl;
     private final Path jreFolderPath;
+    private final String jreListUrl;
 
-    public JreManager(URL downloadUrl, Path jreFolderPath) {
+    public JreManager(URL downloadUrl, Path jreFolderPath, String jreListUrl) {
         this.downloadUrl = downloadUrl;
         this.jreFolderPath = jreFolderPath;
+        this.jreListUrl = jreListUrl;
     }
 
     public List<Integer> getSupportedVersions() throws IOException {

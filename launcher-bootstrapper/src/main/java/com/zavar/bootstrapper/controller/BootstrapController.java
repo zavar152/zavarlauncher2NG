@@ -62,7 +62,7 @@ public class BootstrapController implements Initializable {
         System.out.println(javas);
         try {
             availableIp = config.getAvailableIp();
-            jreManager = new JreManager(new URL(config.getJreDownloadUrl(availableIp)), jreFolder);
+            jreManager = new JreManager(new URL(config.getJreDownloadUrl(availableIp)), jreFolder, config.getJreListUrl());
             isOffline = false;
         } catch (NullPointerException | MalformedURLException e) {
             TrayNotification tray = new TrayNotification("Bootstrapper warning", e.getMessage(), Notifications.WARNING);
@@ -108,7 +108,7 @@ public class BootstrapController implements Initializable {
                 Util.showErrorDialog(t1, observableValue.getValue().toString());
             });
 
-            final Task<Void> launcherUpdateTask = new LauncherUpdateTask(launcherFolder, availableIp + config.getLauncherDownloadUrl());
+            final Task<Void> launcherUpdateTask = new LauncherUpdateTask(launcherFolder, availableIp + config.getLauncherDownloadUrl(), config.getLatestLauncherUrl());
             jreDownloadTask.setOnSucceeded(workerStateEvent -> {
                 Bootstrapper.setOnCloseEvent((windowEvent) -> {
                     if(!launcherUpdateTask.isRunning()) {
