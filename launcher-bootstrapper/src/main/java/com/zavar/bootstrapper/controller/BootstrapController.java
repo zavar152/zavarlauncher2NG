@@ -57,6 +57,8 @@ public class BootstrapController implements Initializable {
     public BootstrapController() throws IOException {
         if(!launcherFolder.toFile().exists())
             FileUtils.forceMkdir(launcherFolder.toFile());
+        if(tempFolder.toFile().exists())
+            FileUtils.deleteDirectory(tempFolder.toFile());
         config = new BootstrapConfig();
         executorService = Executors.newCachedThreadPool();
         javas = JavaFinder.find();
@@ -77,21 +79,17 @@ public class BootstrapController implements Initializable {
         if (!isOffline) {
             bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
 
-            BootstrapperUpdateTask bootstrapperUpdateTask = null;
+            Task<Void> bootstrapperUpdateTask = null;
             try {
-                bootstrapperUpdateTask = new BootstrapperUpdateTask(config.getBootstrapVersion(), availableIp + config.getBootstrapDownloadUrl(), config.getLatestBootstrapUrl());
+                bootstrapperUpdateTask = new BootstrapperUpdateTask(config.getBootstrapVersion(), availableIp + config.getBootstrapDownloadUrl(), config.getLatestBootstrapUrl(), tempFolder);
             } catch (IOException e) {
                 Util.showErrorDialog(e, e.getMessage());
                 Platform.exit();
                 System.exit(0);
             }
 
-            info.textProperty().bind(bootstrapperUpdateTask.titleProperty());
-
             bootstrapperUpdateTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
-                Util.showWarningDialog(t1.getMessage());
-                Platform.exit();
-                System.exit(0);
+                Util.showErrorDialog(t1, t1.getMessage());
             });
 
             final List<Integer> jreToInstall = new ArrayList<>();
@@ -111,18 +109,6 @@ public class BootstrapController implements Initializable {
             }
 
             final Task<Void> jreDownloadTask = new JreDownloadTask(jreToInstall, tempFolder, jreFolder, jreManager);
-
-            info.textProperty().bind(jreDownloadTask.titleProperty());
-            progressInfo.textProperty().bind(jreDownloadTask.messageProperty());
-            bar.progressProperty().bind(jreDownloadTask.progressProperty());
-            Bootstrapper.setOnCloseEvent((windowEvent) -> {
-                if(!jreDownloadTask.isRunning()) {
-                    Platform.exit();
-                    System.exit(0);
-                } else {
-                    windowEvent.consume();
-                }
-            });
 
             jreDownloadTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
                 Util.showErrorDialog(t1, observableValue.getValue().toString());
@@ -156,9 +142,32 @@ public class BootstrapController implements Initializable {
             });
 
             bootstrapperUpdateTask.setOnSucceeded(workerStateEvent -> {
+                Bootstrapper.setOnCloseEvent((windowEvent) -> {
+                    if(!jreDownloadTask.isRunning()) {
+                        Platform.exit();
+                        System.exit(0);
+                    } else {
+                        windowEvent.consume();
+                    }
+                });
+                info.textProperty().bind(jreDownloadTask.titleProperty());
+                progressInfo.textProperty().bind(jreDownloadTask.messageProperty());
+                bar.progressProperty().bind(jreDownloadTask.progressProperty());
                 executorService.submit(jreDownloadTask);
             });
 
+            Task<Void> finalBootstrapperUpdateTask = bootstrapperUpdateTask;
+            Bootstrapper.setOnCloseEvent((windowEvent) -> {
+                if(!finalBootstrapperUpdateTask.isRunning()) {
+                    Platform.exit();
+                    System.exit(0);
+                } else {
+                    windowEvent.consume();
+                }
+            });
+            info.textProperty().bind(bootstrapperUpdateTask.titleProperty());
+            bar.progressProperty().bind(bootstrapperUpdateTask.progressProperty());
+            progressInfo.textProperty().bind(bootstrapperUpdateTask.messageProperty());
             executorService.submit(bootstrapperUpdateTask);
         } else {
             Bootstrapper.setOnCloseEvent((windowEvent) -> {
