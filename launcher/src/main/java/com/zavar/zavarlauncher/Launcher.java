@@ -25,8 +25,7 @@ public class Launcher extends Application {
         ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", new Locale("ru", "RU"));
         Parent parent = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("fxml/main.fxml")), bundle);
         Scene scene = new Scene(parent);
-
-        primaryStage.setResizable(false);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("css/style.css")).toExternalForm());
         primaryStage.setWidth(800);
         primaryStage.setHeight(500);
         primaryStage.setTitle(bundle.getString("main.title"));

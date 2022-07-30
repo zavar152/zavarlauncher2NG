@@ -1,0 +1,112 @@
+.button:hover {
+    -fx-background-color: #55c786;
+    -fx-border-color: #0ec05b;
+}
+
+.button:pressed {
+    -fx-background-color: #46a26e;
+    -fx-border-color: #0c9a49;
+    -fx-scale-y: 0.98;
+    -fx-scale-x: 0.98;
+}
+
+.button {
+    -fx-cursor: HAND;
+    -fx-border-color: #b7efe5;
+    -fx-border-width: 2;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-background-color: #c4dcd8;
+    -fx-text-fill: #ffffff;
+}
+
+#playButton:hover {
+    -fx-background-color: #ffd300;
+    -fx-border-color: #ccb12c;
+}
+
+#playButton:pressed {
+    -fx-background-color: #d5b101;
+    -fx-border-color: #988422;
+    -fx-text-fill: #dedede;
+    -fx-scale-y: 0.98;
+    -fx-scale-x: 0.98;
+}
+
+#instancesList {
+    -fx-border-color: #b7efe5;
+    -fx-border-width: 2;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-background-color: #c4dcd8;
+}
+
+#avatar {
+    -fx-fill: #c4dcd8;
+    -fx-stroke: #b7efe5;
+    -fx-stroke-width: 2;
+}
+
+.backgroundLeftMenu {
+    -fx-background-color:  b8dde0;
+    -fx-background-radius: 0 10 10 0;
+}
+
+.backgroundRightMenu {
+    -fx-background-color:  b8dde0;
+    -fx-background-radius: 10 0 0 10;
+}
+
+#settingsTabs:top .tab-header-area .tab-header-background {
+    -fx-background-color: #c4dcd8;
+    -fx-background-radius: 10 0 0 0;
+    -fx-opacity: 30%;
+}
+
+#settingsTabs:top .tab-header-area .headers-region .tab:top {
+    -fx-background-color: #c4dcd8;
+    -fx-border-width: 1;
+    -fx-border-color: #b7efe5;
+    -fx-border-radius: 10 10 0 0;
+    -fx-background-radius: 10 10 0 0;
+}
+
+#settingsTabs:top .tab-header-area .headers-region .tab:selected:top {
+    -fx-background-color: #dddede;
+    -fx-scale-y: 1.1;
+}
+
+#settingsTabs:top .tab-header-area .headers-region .tab:selected:top .tab-container .focus-indicator {
+    -fx-border-radius: 10 10 0 0;
+}
+
+#settingsTabs:top .tab-header-area .headers-region .tab:top .tab-container {
+    -fx-text-base-color: black;
+    -fx-font-weight: bold;
+    -fx-font-family: Verdana;
+}
+
+.toggle-switch:selected .thumb-area {
+    -fx-background-color: #b7efe5;
+    -fx-border-color: #a4b7b4;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+#jreSelection {
+    -fx-border-color: #b7efe5;
+    -fx-border-radius: 10;
+}
+
+.combo-box {
+    -fx-background-color: #c4dcd8;
+    -fx-border-color: #b7efe5;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+}
+
+/*#mainPane {*/
+/*    -fx-background-image: url("../img/background/default.png");*/
+/*    -fx-background-repeat: stretch;*/
+/*    -fx-background-position: center center;*/
+/*}*/
