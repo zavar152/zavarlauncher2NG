@@ -9,6 +9,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.Objects;
@@ -34,8 +35,9 @@ public class Launcher extends Application {
     @Override
     public void start(Stage primaryStage)  {
         ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", new Locale("ru", "RU"));
-        loader = new FXMLLoader(mainUrl, bundle);
+        loader = new FXMLLoader(mainUrl);
         try {
+            loader.setResources(bundle);
             root = loader.load();
             Main mainController = loader.getController();
             Scene scene = new Scene(root);
@@ -52,6 +54,19 @@ public class Launcher extends Application {
             e.printStackTrace();
         }
         Launcher.primaryStage = primaryStage;
+    }
+
+    public static void loadFxml(Locale locale) throws IOException {
+        primaryStage.hide();
+        ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", locale);
+        loader = new FXMLLoader(mainUrl);
+        loader.setResources(bundle);
+        AnchorPane temp = loader.load();
+        Scene scene = new Scene(temp);
+        scene.getStylesheets().add(cssUrl.toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.show();
+        System.gc();
     }
 
     @Override

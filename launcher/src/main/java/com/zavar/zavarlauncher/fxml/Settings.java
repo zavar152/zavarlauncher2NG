@@ -1,6 +1,7 @@
 package com.zavar.zavarlauncher.fxml;
 
 import com.zavar.common.finder.JavaFinder;
+import com.zavar.zavarlauncher.Launcher;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
@@ -8,6 +9,7 @@ import javafx.scene.control.Label;
 import org.controlsfx.control.ListSelectionView;
 import org.controlsfx.control.ToggleSwitch;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
@@ -43,6 +45,13 @@ public class Settings implements Initializable {
                 langBox.valueProperty().setValue(name);
             locales.put(name, temp);
             langBox.getItems().add(name);
+        });
+        langBox.valueProperty().addListener((observableValue, s, t1) -> {
+            try {
+                Launcher.loadFxml(locales.get(t1));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 
