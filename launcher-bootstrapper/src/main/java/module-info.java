@@ -9,7 +9,7 @@ module com.zavar.bootstrapper {
     requires org.apache.commons.io;
     requires org.json;
     requires TrayNotification.master;
-    requires launcher.common;
+    requires com.zavar.launcher.common;
     requires zip4j;
     requires org.jfxtras.styles.jmetro;
     requires org.apache.commons.lang3;

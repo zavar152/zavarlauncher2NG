@@ -33,7 +33,7 @@
     -fx-scale-x: 0.98;
 }
 
-#instancesList {
+.list-view:vertical {
     -fx-border-color: #b7efe5;
     -fx-border-width: 2;
     -fx-border-radius: 10;
@@ -105,8 +105,6 @@
     -fx-border-radius: 3;
 }
 
-/*#mainPane {*/
-/*    -fx-background-image: url("../img/background/default.png");*/
-/*    -fx-background-repeat: stretch;*/
-/*    -fx-background-position: center center;*/
-/*}*/
+addJre {
+    -fx-background-color: transparent;
+}

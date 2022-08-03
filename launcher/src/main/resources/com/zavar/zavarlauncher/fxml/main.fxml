@@ -24,7 +24,7 @@
             <Image url="@../img/background/default.png" />
          </image>
       </ImageView>
-      <fx:include maxHeight="482.0" maxWidth="280.0" minHeight="482.0" minWidth="280.0" prefHeight="482.0" prefWidth="280.0" source="settings.fxml" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="15.0" />
+      <fx:include fx:id="settingsFxml" maxHeight="482.0" maxWidth="280.0" minHeight="482.0" minWidth="280.0" prefHeight="482.0" prefWidth="280.0" source="settings.fxml" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="15.0" />
       <AnchorPane fx:id="mainMenuBackgroundPane" layoutX="-18.0" layoutY="10.0" opacity="0.3" prefHeight="482.0" prefWidth="280.0" styleClass="backgroundLeftMenu" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="15.0" />
       <AnchorPane fx:id="mainMenuControlsPane" layoutY="15.0" prefHeight="370.0" prefWidth="240.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="17.0" AnchorPane.topAnchor="20.0">
          <children>

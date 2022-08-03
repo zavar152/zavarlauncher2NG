@@ -1,4 +1,5 @@
 module com.zavar.zavarlauncher {
+    requires com.zavar.launcher.common;
     requires javafx.controls;
     requires javafx.fxml;
     requires org.controlsfx.controls;
