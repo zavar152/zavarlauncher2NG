@@ -8,11 +8,17 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.LocaleUtils;
 
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.ResourceBundle;
 
 public class Launcher extends Application {
@@ -23,23 +29,40 @@ public class Launcher extends Application {
     private static URL cssUrl;
     private static AnchorPane root;
     private static FXMLLoader loader;
+    private static final Path userHomeFolder = Path.of(System.getProperty("user.home"));
+    private static final Path launcherFolder = userHomeFolder.resolve("zavarlauncher2");
+    private final Path tempFolder = launcherFolder.resolve("temp");
+    private final Path jreFolder = launcherFolder.resolve("jre");
+    private static final Path settingsFile = launcherFolder.resolve("settings.properties");
+    private static final Properties settings = new Properties();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        if(!Files.exists(settingsFile)) {
+            Files.copy(Objects.requireNonNull(Launcher.class.getResource("settings/default.properties")).openStream(), settingsFile);
+        }
+        settings.load(new FileReader(settingsFile.toFile()));
+
         mainUrl = Objects.requireNonNull(Launcher.class.getResource("fxml/main.fxml"));
         icon = new Image(Objects.requireNonNull(Launcher.class.getResourceAsStream("img/icons/icon.png")));
         cssUrl = Objects.requireNonNull(Launcher.class.getResource("css/style.css"));
         launch(args);
     }
 
+    public static void saveSettings() throws IOException {
+        System.out.println(settings);
+        settings.store(new FileWriter(settingsFile.toFile()), null);
+    }
+
     //TODO Resources paths
     @Override
     public void start(Stage primaryStage)  {
-        ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", new Locale("ru", "RU"));
+        ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", LocaleUtils.toLocale(settings.getProperty("general.lang")));
         loader = new FXMLLoader(mainUrl);
         try {
             loader.setResources(bundle);
             root = loader.load();
             Main mainController = loader.getController();
+            mainController.setupSettings(settings);
             Scene scene = new Scene(root);
             scene.getStylesheets().add(cssUrl.toExternalForm());
             primaryStage.setWidth(800);
@@ -56,12 +79,30 @@ public class Launcher extends Application {
         Launcher.primaryStage = primaryStage;
     }
 
-    public static void loadFxml(Locale locale) throws IOException {
+    public static void loadMainFxmlWithSettings(Locale locale) throws IOException {
         primaryStage.hide();
         ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", locale);
         loader = new FXMLLoader(mainUrl);
         loader.setResources(bundle);
         AnchorPane temp = loader.load();
+        Main mainController = loader.getController();
+        mainController.setupSettings(settings);
+        mainController.openSettings();
+        Scene scene = new Scene(temp);
+        scene.getStylesheets().add(cssUrl.toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.show();
+        System.gc();
+    }
+
+    public static void loadMainFxml(Locale locale) throws IOException {
+        primaryStage.hide();
+        ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", locale);
+        loader = new FXMLLoader(mainUrl);
+        loader.setResources(bundle);
+        AnchorPane temp = loader.load();
+        Main mainController = loader.getController();
+        mainController.setupSettings(settings);
         Scene scene = new Scene(temp);
         scene.getStylesheets().add(cssUrl.toExternalForm());
         primaryStage.setScene(scene);

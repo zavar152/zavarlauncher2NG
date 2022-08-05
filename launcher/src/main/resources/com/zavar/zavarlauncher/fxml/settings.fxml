@@ -40,7 +40,7 @@
                               <Font name="Verdana Bold" size="12.0" />
                            </font>
                         </Label>
-                        <ToggleSwitch fx:id="animationSwitch" layoutX="213.0" layoutY="74.0" selected="true" AnchorPane.rightAnchor="14.0" />
+                        <ToggleSwitch fx:id="animationSwitch" layoutX="213.0" layoutY="74.0" AnchorPane.rightAnchor="14.0" />
                      </children></AnchorPane>
             </content>
           </Tab>
@@ -54,7 +54,7 @@
                               <Font name="Verdana Bold" size="12.0" />
                            </font>
                         </Label>
-                        <ToggleSwitch fx:id="autoSwitch" layoutX="219.0" layoutY="13.999999999999979" selected="true" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="13.999999999999979" />
+                        <ToggleSwitch fx:id="autoSwitch" layoutX="219.0" layoutY="13.999999999999979" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="13.999999999999979" />
                      </children></AnchorPane>
             </content>
           </Tab>

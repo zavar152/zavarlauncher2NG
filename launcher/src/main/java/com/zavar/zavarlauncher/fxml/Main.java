@@ -11,7 +11,7 @@ import java.util.*;
 
 public class Main implements Initializable {
     @FXML
-    private Button playButton;
+    private Button playButton, settingsButton;
     @FXML
     private ImageView backgroundImage;
     @FXML
@@ -23,9 +23,25 @@ public class Main implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        settingsFxml.setVisible(false);
         settingsFxmlController.setLocalesList(resourceBundle.getLocale(), getAvailableLocales());
         backgroundImage.fitWidthProperty().bind(mainPane.widthProperty());
         backgroundImage.fitHeightProperty().bind(mainPane.heightProperty());
+        settingsButton.setOnMouseClicked(mouseEvent -> {
+            if(settingsFxml.isVisible()) {
+                closeSettings();
+            } else {
+                openSettings();
+            }
+        });
+    }
+
+    public void openSettings() {
+        settingsFxml.setVisible(true);
+    }
+
+    private void closeSettings() {
+        settingsFxml.setVisible(false);
     }
 
     private Set<ResourceBundle> getAvailableLocales() {
@@ -33,5 +49,9 @@ public class Main implements Initializable {
         for (Locale locale : Locale.getAvailableLocales())
             resourceBundles.add(ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", locale));
         return Collections.unmodifiableSet(resourceBundles);
+    }
+
+    public void setupSettings(Properties settings) {
+        settingsFxmlController.setupSettings(settings);
     }
 }

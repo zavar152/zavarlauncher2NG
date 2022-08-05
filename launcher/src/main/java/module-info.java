@@ -7,6 +7,8 @@ module com.zavar.zavarlauncher {
     requires javafx.graphics;
     requires org.update4j;
     requires org.apache.commons.net;
+    requires org.apache.commons.io;
+    requires org.apache.commons.lang3;
     requires jmccc;
     requires jmccc.yggdrasil.authenticator;
 
