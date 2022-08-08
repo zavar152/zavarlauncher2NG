@@ -3,6 +3,7 @@ package com.zavar.zavarlauncher;
 import com.zavar.zavarlauncher.fxml.Main;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -20,6 +21,9 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Launcher extends Application {
 
@@ -87,11 +91,18 @@ public class Launcher extends Application {
         AnchorPane temp = loader.load();
         Main mainController = loader.getController();
         mainController.setupSettings(settings);
-        mainController.openSettings();
         Scene scene = new Scene(temp);
         scene.getStylesheets().add(cssUrl.toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
+        ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
+        sch.scheduleWithFixedDelay(new Task<Void>() {
+            @Override
+            protected Void call() {
+                mainController.openSettings();
+                return null;
+            }
+        }, 1, 1, TimeUnit.SECONDS);
         System.gc();
     }
 

@@ -4,8 +4,11 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -49,7 +52,7 @@
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <ListSelectionView fx:id="jreSelection" layoutX="8.0" layoutY="45.0" orientation="VERTICAL" prefHeight="344.0" prefWidth="264.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="40.0" />
-                        <Label layoutX="8.0" layoutY="14.0" prefHeight="18.0" prefWidth="162.0" text="%settings.java.auto" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0">
+                        <Label layoutX="8.0" layoutY="14.0" prefHeight="18.0" prefWidth="211.0" text="%settings.java.auto" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0">
                            <font>
                               <Font name="Verdana Bold" size="12.0" />
                            </font>
@@ -67,6 +70,24 @@
                               <Font name="Verdana Bold" size="12.0" />
                            </font>
                         </Label>
+                        <TextField fx:id="widthField" layoutX="14.0" layoutY="37.0" prefHeight="26.0" prefWidth="90.0" AnchorPane.leftAnchor="14.0">
+                           <font>
+                              <Font name="Verdana" size="12.0" />
+                           </font>
+                        </TextField>
+                        <TextField fx:id="heightField" layoutX="140.0" layoutY="37.0" prefHeight="26.0" prefWidth="90.0" AnchorPane.leftAnchor="140.0" />
+                        <Label layoutX="117.0" layoutY="42.0" text="X" AnchorPane.leftAnchor="117.0">
+                           <font>
+                              <Font name="Verdana Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <Label layoutX="16.0" layoutY="73.0" text="%settings.minecraft.ram" textAlignment="CENTER" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
+                           <font>
+                              <Font name="Verdana Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <Spinner fx:id="ramSpinner" editable="true" layoutX="14.0" layoutY="132.0" prefHeight="26.0" prefWidth="111.0" AnchorPane.leftAnchor="14.0" />
+                        <Slider fx:id="ramSlider" blockIncrement="100.0" layoutX="14.0" layoutY="94.0" minorTickCount="0" prefHeight="38.0" prefWidth="247.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
                      </children></AnchorPane>
                </content>
             </Tab>
