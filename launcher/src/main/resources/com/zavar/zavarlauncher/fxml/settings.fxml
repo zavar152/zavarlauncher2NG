@@ -87,7 +87,7 @@
                            </font>
                         </Label>
                         <Spinner fx:id="ramSpinner" editable="true" layoutX="14.0" layoutY="132.0" prefHeight="26.0" prefWidth="111.0" AnchorPane.leftAnchor="14.0" />
-                        <Slider fx:id="ramSlider" blockIncrement="100.0" layoutX="14.0" layoutY="94.0" minorTickCount="0" prefHeight="38.0" prefWidth="247.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+                        <Slider fx:id="ramSlider" blockIncrement="1024.0" disable="true" layoutX="14.0" layoutY="94.0" majorTickUnit="16384.0" max="16384.0" min="1024.0" minorTickCount="0" prefHeight="38.0" prefWidth="247.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
                      </children></AnchorPane>
                </content>
             </Tab>

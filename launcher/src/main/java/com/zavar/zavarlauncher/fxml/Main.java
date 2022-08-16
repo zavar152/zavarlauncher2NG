@@ -1,5 +1,6 @@
 package com.zavar.zavarlauncher.fxml;
 
+import com.zavar.common.finder.JavaFinder;
 import javafx.animation.FadeTransition;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Main implements Initializable {
     @FXML
-    private Button playButton, settingsButton;
+    private Button playButton, settingsButton, updateButton, folderButton;
     @FXML
     private ImageView backgroundImage;
     @FXML
@@ -29,19 +30,23 @@ public class Main implements Initializable {
     private final FadeTransition fadeSettingsTransition = new FadeTransition(Duration.millis(500));
     private final FadeTransition fadeMainControlsTransition = new FadeTransition(Duration.millis(500));
     private final FadeTransition fadeMainBackgroundTransition = new FadeTransition(Duration.millis(500));
+    private boolean animationEnable = false;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         fadeMainBackgroundTransition.setNode(mainMenuBackgroundPane);
         fadeMainControlsTransition.setNode(mainMenuControlsPane);
         closeMain();
         settingsFxmlController.setLocalesList(resourceBundle.getLocale(), getAvailableLocales());
+        settingsFxmlController.setAvailableJavas(JavaFinder.find());
+        settingsFxmlController.setOnSettingsSaved(settings -> animationEnable = Boolean.parseBoolean(settings.getProperty("general.animation")));
         backgroundImage.fitWidthProperty().bind(mainPane.widthProperty());
         backgroundImage.fitHeightProperty().bind(mainPane.heightProperty());
         fadeSettingsTransition.setNode(settingsFxml);
         closeSettings();
         settingsButton.setOnMouseClicked(mouseEvent -> {
-            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
-                if(fadeSettingsTransition.getToValue() == 1.0) {
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                if (fadeSettingsTransition.getToValue() == 1.0) {
                     closeSettings();
                 } else {
                     openSettings();
@@ -57,7 +62,7 @@ public class Main implements Initializable {
             }
         }, 1, 1, TimeUnit.SECONDS);
         settingsFxmlController.setBackButtonHandler(mouseEvent -> {
-            if(mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
                 closeSettings();
             }
         });
@@ -65,30 +70,49 @@ public class Main implements Initializable {
 
     public void openSettings() {
         fadeSettingsTransition.stop();
-        fadeSettingsTransition.setFromValue(0);
+        if (animationEnable)
+            fadeSettingsTransition.setFromValue(0);
+        else
+            fadeSettingsTransition.setFromValue(1.0);
         fadeSettingsTransition.setToValue(1.0);
-        fadeSettingsTransition.setOnFinished(actionEvent -> {});
+        fadeSettingsTransition.setOnFinished(actionEvent -> {
+        });
         settingsFxml.setDisable(false);
         fadeSettingsTransition.play();
+        playButton.setDisable(true);
+        folderButton.setDisable(true);
+        updateButton.setDisable(true);
     }
 
     private void closeSettings() {
         fadeSettingsTransition.stop();
-        fadeSettingsTransition.setFromValue(1.0);
+        if (animationEnable)
+            fadeSettingsTransition.setFromValue(1.0);
+        else
+            fadeSettingsTransition.setFromValue(0);
         fadeSettingsTransition.setToValue(0);
         fadeSettingsTransition.setOnFinished(actionEvent -> {
             settingsFxml.setDisable(true);
             settingsFxmlController.resetSettingsFromFile();
         });
         fadeSettingsTransition.play();
+        playButton.setDisable(false);
+        folderButton.setDisable(false);
+        updateButton.setDisable(false);
     }
 
     private void openMain() {
         fadeMainBackgroundTransition.stop();
-        fadeMainBackgroundTransition.setFromValue(0);
+        if(animationEnable)
+            fadeMainBackgroundTransition.setFromValue(0);
+        else
+            fadeMainBackgroundTransition.setFromValue(0.3);
         fadeMainBackgroundTransition.setToValue(0.3);
         fadeMainControlsTransition.stop();
-        fadeMainControlsTransition.setFromValue(0);
+        if(animationEnable)
+            fadeMainControlsTransition.setFromValue(0);
+        else
+            fadeMainControlsTransition.setFromValue(1.0);
         fadeMainControlsTransition.setToValue(1.0);
         fadeMainControlsTransition.play();
         fadeMainBackgroundTransition.play();
@@ -96,10 +120,16 @@ public class Main implements Initializable {
 
     private void closeMain() {
         fadeMainBackgroundTransition.stop();
-        fadeMainBackgroundTransition.setFromValue(0.3);
+        if(animationEnable)
+            fadeMainBackgroundTransition.setFromValue(0.3);
+        else
+            fadeMainBackgroundTransition.setFromValue(0);
         fadeMainBackgroundTransition.setToValue(0);
         fadeMainControlsTransition.stop();
-        fadeMainControlsTransition.setFromValue(1.0);
+        if(animationEnable)
+            fadeMainControlsTransition.setFromValue(1.0);
+        else
+            fadeMainControlsTransition.setFromValue(0);
         fadeMainControlsTransition.setToValue(0);
         fadeMainControlsTransition.play();
         fadeMainBackgroundTransition.play();
@@ -113,6 +143,7 @@ public class Main implements Initializable {
     }
 
     public void setupSettings(Properties settings) {
+        animationEnable = Boolean.parseBoolean(settings.getProperty("general.animation"));
         settingsFxmlController.setupSettings(settings);
     }
 }
