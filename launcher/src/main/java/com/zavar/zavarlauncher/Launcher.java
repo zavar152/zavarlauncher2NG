@@ -1,5 +1,6 @@
 package com.zavar.zavarlauncher;
 
+import com.vdurmont.semver4j.Semver;
 import com.zavar.zavarlauncher.fxml.Console;
 import com.zavar.zavarlauncher.fxml.Main;
 import javafx.application.Application;
@@ -7,6 +8,7 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -17,6 +19,7 @@ import org.apache.logging.log4j.core.LoggerContext;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,17 +46,39 @@ public class Launcher extends Application {
     private static final Path settingsFile = launcherFolder.resolve("settings.properties");
     private static final Properties settings = new Properties();
     private static final Logger logger = LoggerContext.getContext().getLogger(Launcher.class.getName());
+    private static final TextArea consoleTextArea = new TextArea();
+    private static Semver launcherVersion;
+    private static int launcherJavaVersion;
 
     public static void main(String[] args) throws IOException {
+        System.setOut(new PrintStream(new Console.StreamCapturer(System.out, consoleTextArea::appendText)));
+        setupVersion();
         if(!Files.exists(settingsFile)) {
+            logger.info("Settings file created");
             Files.copy(Objects.requireNonNull(Launcher.class.getResource("settings/default.properties")).openStream(), settingsFile);
         }
         settings.load(new FileReader(settingsFile.toFile()));
+        logger.info("Settings loaded");
 
         mainUrl = Objects.requireNonNull(Launcher.class.getResource("fxml/main.fxml"));
         icon = new Image(Objects.requireNonNull(Launcher.class.getResourceAsStream("img/icons/icon.png")));
         cssUrl = Objects.requireNonNull(Launcher.class.getResource("css/style.css"));
         launch(args);
+    }
+
+    private static void setupVersion() throws IOException {
+        Properties version = new Properties();
+        version.load(Objects.requireNonNull(Launcher.class.getResource("/version.properties")).openStream());
+        launcherVersion = new Semver(version.getProperty("launcherVersion"));
+        launcherJavaVersion = Integer.parseInt(version.getProperty("launcherJavaVersion"));
+    }
+
+    public static Semver getLauncherVersion() {
+        return launcherVersion;
+    }
+
+    public static int getLauncherJavaVersion() {
+        return launcherJavaVersion;
     }
 
     public static void saveSettings() throws IOException {
@@ -64,6 +89,7 @@ public class Launcher extends Application {
     //TODO Resources paths
     @Override
     public void start(Stage primaryStage) throws IOException {
+        logger.info("Starting launcher");
         ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", LocaleUtils.toLocale(settings.getProperty("general.lang")));
         initConsole(bundle);
         loader = new FXMLLoader(mainUrl);
@@ -78,7 +104,7 @@ public class Launcher extends Application {
             primaryStage.setHeight(500);
             primaryStage.setMinWidth(800);
             primaryStage.setMinHeight(500);
-            primaryStage.setTitle(bundle.getString("main.title"));
+            primaryStage.setTitle(bundle.getString("main.title") + " v" + launcherVersion.toString());
             primaryStage.getIcons().add(icon);
             primaryStage.setScene(scene);
             primaryStage.requestFocus();
@@ -105,8 +131,8 @@ public class Launcher extends Application {
         scene.getStylesheets().add(cssUrl.toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
-        primaryStage.requestFocus();
         initConsole(bundle);
+        primaryStage.requestFocus();
         ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
         sch.scheduleWithFixedDelay(new Task<Void>() {
             @Override
@@ -130,8 +156,8 @@ public class Launcher extends Application {
         scene.getStylesheets().add(cssUrl.toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
-        primaryStage.requestFocus();
         initConsole(bundle);
+        primaryStage.requestFocus();
         System.gc();
     }
 
@@ -155,7 +181,18 @@ public class Launcher extends Application {
             consoleStage = new Stage();
         FXMLLoader fxmlLoader = new FXMLLoader(Objects.requireNonNull(Launcher.class.getResource("fxml/console.fxml")), resourceBundle);
         AnchorPane consoleRoot = fxmlLoader.load();
+        AnchorPane.setBottomAnchor(consoleTextArea, 0.0D);
+        AnchorPane.setTopAnchor(consoleTextArea, 0.0D);
+        AnchorPane.setRightAnchor(consoleTextArea, 0.0D);
+        AnchorPane.setLeftAnchor(consoleTextArea, 0.0D);
+        consoleRoot.getChildren().add(consoleTextArea);
+        consoleStage.setMinHeight(400);
+        consoleStage.setMinWidth(600);
+        consoleStage.setWidth(600);
+        consoleStage.setHeight(400);
         consoleStage.setScene(new Scene(consoleRoot, 600, 400));
+        consoleStage.setTitle("ZL Console");
+        consoleStage.getIcons().add(icon);
         consoleStage.show();
         return fxmlLoader.getController();
     }

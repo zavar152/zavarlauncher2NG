@@ -12,6 +12,7 @@ module com.zavar.zavarlauncher {
     requires jmccc;
     requires jmccc.yggdrasil.authenticator;
     requires org.apache.logging.log4j.core;
+    requires semver4j;
 
     opens com.zavar.zavarlauncher to javafx.fxml;
     exports com.zavar.zavarlauncher;
