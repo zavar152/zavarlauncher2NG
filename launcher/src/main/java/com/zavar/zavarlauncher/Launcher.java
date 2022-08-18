@@ -1,5 +1,6 @@
 package com.zavar.zavarlauncher;
 
+import com.zavar.zavarlauncher.fxml.Console;
 import com.zavar.zavarlauncher.fxml.Main;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -10,6 +11,8 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.LocaleUtils;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -27,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Launcher extends Application {
 
-    private static Stage primaryStage;
+    private static Stage primaryStage, consoleStage;
     private static URL mainUrl;
     private static Image icon;
     private static URL cssUrl;
@@ -39,6 +42,7 @@ public class Launcher extends Application {
     private final Path jreFolder = launcherFolder.resolve("jre");
     private static final Path settingsFile = launcherFolder.resolve("settings.properties");
     private static final Properties settings = new Properties();
+    private static final Logger logger = LoggerContext.getContext().getLogger(Launcher.class.getName());
 
     public static void main(String[] args) throws IOException {
         if(!Files.exists(settingsFile)) {
@@ -53,14 +57,15 @@ public class Launcher extends Application {
     }
 
     public static void saveSettings() throws IOException {
-        System.out.println(settings);
         settings.store(new FileWriter(settingsFile.toFile()), null);
+        logger.info("Saved settings: " + settings);
     }
 
     //TODO Resources paths
     @Override
-    public void start(Stage primaryStage)  {
+    public void start(Stage primaryStage) throws IOException {
         ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", LocaleUtils.toLocale(settings.getProperty("general.lang")));
+        initConsole(bundle);
         loader = new FXMLLoader(mainUrl);
         try {
             loader.setResources(bundle);
@@ -76,10 +81,15 @@ public class Launcher extends Application {
             primaryStage.setTitle(bundle.getString("main.title"));
             primaryStage.getIcons().add(icon);
             primaryStage.setScene(scene);
+            primaryStage.requestFocus();
             primaryStage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        primaryStage.setOnCloseRequest(windowEvent -> {
+            consoleStage.close();
+            primaryStage.close();
+        });
         Launcher.primaryStage = primaryStage;
     }
 
@@ -95,6 +105,8 @@ public class Launcher extends Application {
         scene.getStylesheets().add(cssUrl.toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
+        primaryStage.requestFocus();
+        initConsole(bundle);
         ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
         sch.scheduleWithFixedDelay(new Task<Void>() {
             @Override
@@ -118,12 +130,15 @@ public class Launcher extends Application {
         scene.getStylesheets().add(cssUrl.toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
+        primaryStage.requestFocus();
+        initConsole(bundle);
         System.gc();
     }
 
     @Override
     public void stop() throws Exception {
         super.stop();
+        consoleStage.close();
         Platform.exit();
         System.exit(0);
     }
@@ -131,5 +146,17 @@ public class Launcher extends Application {
     @Override
     public void init() throws Exception {
         super.init();
+    }
+
+    private static Console initConsole(ResourceBundle resourceBundle) throws IOException {
+        if(Objects.nonNull(consoleStage))
+            consoleStage.hide();
+        else
+            consoleStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(Objects.requireNonNull(Launcher.class.getResource("fxml/console.fxml")), resourceBundle);
+        AnchorPane consoleRoot = fxmlLoader.load();
+        consoleStage.setScene(new Scene(consoleRoot, 600, 400));
+        consoleStage.show();
+        return fxmlLoader.getController();
     }
 }
