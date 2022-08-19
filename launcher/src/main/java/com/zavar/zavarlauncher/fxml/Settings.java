@@ -47,6 +47,10 @@ public class Settings implements Initializable {
             if(settingsChanged) {
                 String value = langBox.valueProperty().getValue();
                 try {
+                    if(consoleSwitch.isSelected() && !Boolean.parseBoolean(settings.getProperty("general.console")))
+                        Launcher.showConsole(resourceBundle);
+                    else if(!consoleSwitch.isSelected() && Boolean.parseBoolean(settings.getProperty("general.console")))
+                        Launcher.hideConsole();
                     settings.setProperty("general.animation", String.valueOf(animationSwitch.isSelected()));
                     settings.setProperty("general.console", String.valueOf(consoleSwitch.isSelected()));
                     settings.setProperty("java.autojre", String.valueOf(autoSwitch.isSelected()));

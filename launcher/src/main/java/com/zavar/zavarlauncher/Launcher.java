@@ -52,8 +52,9 @@ public class Launcher extends Application {
 
     public static void main(String[] args) throws IOException {
         System.setOut(new PrintStream(new Console.StreamCapturer(System.out, consoleTextArea::appendText)));
+        System.setErr(new PrintStream(new Console.StreamCapturer(System.err, consoleTextArea::appendText)));
         setupVersion();
-        if(!Files.exists(settingsFile)) {
+        if (!Files.exists(settingsFile)) {
             logger.info("Settings file created");
             Files.copy(Objects.requireNonNull(Launcher.class.getResource("settings/default.properties")).openStream(), settingsFile);
         }
@@ -91,7 +92,8 @@ public class Launcher extends Application {
     public void start(Stage primaryStage) throws IOException {
         logger.info("Starting launcher");
         ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", LocaleUtils.toLocale(settings.getProperty("general.lang")));
-        initConsole(bundle);
+        if (Boolean.parseBoolean(settings.getProperty("general.console")))
+            showConsole(bundle);
         loader = new FXMLLoader(mainUrl);
         try {
             loader.setResources(bundle);
@@ -120,6 +122,7 @@ public class Launcher extends Application {
     }
 
     public static void loadMainFxmlWithSettings(Locale locale) throws IOException {
+        logger.info("Language changed - " + locale.toString());
         primaryStage.hide();
         ResourceBundle bundle = ResourceBundle.getBundle("com/zavar/zavarlauncher/lang/launcher", locale);
         loader = new FXMLLoader(mainUrl);
@@ -131,7 +134,8 @@ public class Launcher extends Application {
         scene.getStylesheets().add(cssUrl.toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
-        initConsole(bundle);
+        if (Boolean.parseBoolean(settings.getProperty("general.console")))
+            showConsole(bundle);
         primaryStage.requestFocus();
         ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
         sch.scheduleWithFixedDelay(new Task<Void>() {
@@ -156,7 +160,8 @@ public class Launcher extends Application {
         scene.getStylesheets().add(cssUrl.toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
-        initConsole(bundle);
+        if (Boolean.parseBoolean(settings.getProperty("general.console")))
+            showConsole(bundle);
         primaryStage.requestFocus();
         System.gc();
     }
@@ -174,8 +179,9 @@ public class Launcher extends Application {
         super.init();
     }
 
-    private static Console initConsole(ResourceBundle resourceBundle) throws IOException {
-        if(Objects.nonNull(consoleStage))
+    public static void showConsole(ResourceBundle resourceBundle) throws IOException {
+        logger.info("Starting console");
+        if (Objects.nonNull(consoleStage))
             consoleStage.hide();
         else
             consoleStage = new Stage();
@@ -193,7 +199,14 @@ public class Launcher extends Application {
         consoleStage.setScene(new Scene(consoleRoot, 600, 400));
         consoleStage.setTitle("ZL Console");
         consoleStage.getIcons().add(icon);
+        consoleStage.setX(0);
+        consoleStage.setY(5);
         consoleStage.show();
-        return fxmlLoader.getController();
+    }
+
+    public static void hideConsole() throws IOException {
+        logger.info("Hiding console");
+        if (Objects.nonNull(consoleStage))
+            consoleStage.hide();
     }
 }
