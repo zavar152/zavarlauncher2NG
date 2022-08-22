@@ -1,18 +1,34 @@
 package com.zavar.common.finder;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import org.apache.commons.lang3.SystemUtils;
 
+import java.io.*;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public final class JavaFinder {
+    private static final Gson GSON;
     private static final Set<Java> javas = new HashSet<>();
 
-    public record Java(String name, int version, Path home) {
+    static {
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(Java.class, new JavaGsonAdapter());
+        GSON = builder.create();
+    }
+
+    public record Java(String name, int version, Path home) implements Serializable {
     }
 
     /**
@@ -45,6 +61,16 @@ public final class JavaFinder {
         return javas;
     }
 
+    public static void javasToJson(List<Java> javas, Path path) throws IOException {
+        FileWriter fileWriter = new FileWriter(path.toFile());
+        GSON.toJson(javas, fileWriter);
+        fileWriter.close();
+    }
+
+    public static List<Java> jsonToJavas(Path path) throws FileNotFoundException {
+        return GSON.fromJson(new FileReader(path.toFile()), new TypeToken<List<Java>>(){}.getType());
+    }
+
     private static int getVersion(String version) {
         version = version.replaceAll("jdk", "").replaceAll("jre", "");
         if (version.startsWith("1.")) {
@@ -56,5 +82,44 @@ public final class JavaFinder {
             }
         }
         return Integer.parseInt(version);
+    }
+
+    private static class JavaGsonAdapter extends TypeAdapter<Java> {
+
+        @Override
+        public void write(JsonWriter jsonWriter, Java java) throws IOException {
+            if(java == null) {
+                jsonWriter.nullValue();
+                return;
+            }
+            jsonWriter.beginObject();
+            jsonWriter.name("name").value(java.name());
+            jsonWriter.name("version").value(java.version());
+            jsonWriter.name("home").value(java.home().toString());
+            jsonWriter.endObject();
+            //jsonWriter.flush();
+        }
+
+        @Override
+        public Java read(JsonReader jsonReader) throws IOException {
+            if(jsonReader.peek() == JsonToken.NULL) {
+                jsonReader.nextNull();
+                return null;
+            }
+            jsonReader.beginObject();
+            String name = null;
+            int version = 0;
+            String path = null;
+            while (jsonReader.hasNext()) {
+                switch (jsonReader.nextName()) {
+                    case "name" -> name = jsonReader.nextString();
+                    case "version" -> version = jsonReader.nextInt();
+                    case "home" -> path = jsonReader.nextString();
+                }
+            }
+            jsonReader.endObject();
+            assert path != null;
+            return new Java(name, version, Path.of(path));
+        }
     }
 }

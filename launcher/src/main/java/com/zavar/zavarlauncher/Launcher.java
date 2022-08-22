@@ -67,6 +67,10 @@ public class Launcher extends Application {
         launch(args);
     }
 
+    public static Path getLauncherFolder() {
+        return launcherFolder;
+    }
+
     private static void setupVersion() throws IOException {
         Properties version = new Properties();
         version.load(Objects.requireNonNull(Launcher.class.getResource("/version.properties")).openStream());
@@ -209,4 +213,6 @@ public class Launcher extends Application {
         if (Objects.nonNull(consoleStage))
             consoleStage.hide();
     }
+
+
 }

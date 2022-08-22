@@ -3,4 +3,6 @@ module com.zavar.launcher.common {
     requires com.sun.jna;
     requires com.sun.jna.platform;
     requires org.apache.commons.lang3;
+    requires com.google.gson;
+    requires javafx.controls;
 }

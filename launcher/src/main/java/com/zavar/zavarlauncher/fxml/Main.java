@@ -11,6 +11,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.Duration;
 
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -38,7 +39,11 @@ public class Main implements Initializable {
         fadeMainControlsTransition.setNode(mainMenuControlsPane);
         closeMain();
         settingsFxmlController.setLocalesList(resourceBundle.getLocale(), getAvailableLocales());
-        settingsFxmlController.setAvailableJavas(JavaFinder.find());
+        try {
+            settingsFxmlController.setAvailableJavas(JavaFinder.find());
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         settingsFxmlController.setOnSettingsSaved(settings -> animationEnable = Boolean.parseBoolean(settings.getProperty("general.animation")));
         backgroundImage.fitWidthProperty().bind(mainPane.widthProperty());
         backgroundImage.fitHeightProperty().bind(mainPane.heightProperty());
@@ -93,7 +98,11 @@ public class Main implements Initializable {
         fadeSettingsTransition.setToValue(0);
         fadeSettingsTransition.setOnFinished(actionEvent -> {
             settingsFxml.setDisable(true);
-            settingsFxmlController.resetSettingsFromFile();
+            try {
+                settingsFxmlController.resetSettingsFromFile();
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
         });
         fadeSettingsTransition.play();
         playButton.setDisable(false);
@@ -142,7 +151,7 @@ public class Main implements Initializable {
         return Collections.unmodifiableSet(resourceBundles);
     }
 
-    public void setupSettings(Properties settings) {
+    public void setupSettings(Properties settings) throws FileNotFoundException {
         animationEnable = Boolean.parseBoolean(settings.getProperty("general.animation"));
         settingsFxmlController.setupSettings(settings);
     }

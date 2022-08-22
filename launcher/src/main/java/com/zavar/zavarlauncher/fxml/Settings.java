@@ -3,6 +3,8 @@ package com.zavar.zavarlauncher.fxml;
 import com.zavar.common.finder.JavaFinder;
 import com.zavar.zavarlauncher.Launcher;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -11,6 +13,7 @@ import javafx.scene.input.MouseEvent;
 import org.controlsfx.control.ListSelectionView;
 import org.controlsfx.control.ToggleSwitch;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
@@ -51,6 +54,7 @@ public class Settings implements Initializable {
                         Launcher.showConsole(resourceBundle);
                     else if(!consoleSwitch.isSelected() && Boolean.parseBoolean(settings.getProperty("general.console")))
                         Launcher.hideConsole();
+                    JavaFinder.javasToJson(jreSelection.getTargetItems().stream().toList(), Launcher.getLauncherFolder().resolve("javas.json"));
                     settings.setProperty("general.animation", String.valueOf(animationSwitch.isSelected()));
                     settings.setProperty("general.console", String.valueOf(consoleSwitch.isSelected()));
                     settings.setProperty("java.autojre", String.valueOf(autoSwitch.isSelected()));
@@ -86,6 +90,8 @@ public class Settings implements Initializable {
         ramSpinner.valueProperty().addListener(settingsChangedListener);
         widthField.textProperty().addListener(settingsChangedListener);
         heightField.textProperty().addListener(settingsChangedListener);
+        jreSelection.getSourceItems().addListener((ListChangeListener<? super JavaFinder.Java>) change -> settingsChanged = true);
+        jreSelection.getTargetItems().addListener((ListChangeListener<? super JavaFinder.Java>) change -> settingsChanged = true);
     }
 
     public void setLocalesList(Locale currentLocale, Set<ResourceBundle> resourceBundles) {
@@ -101,11 +107,16 @@ public class Settings implements Initializable {
         });
     }
 
-    public void setAvailableJavas(Set<JavaFinder.Java> javas) {
-        javas.forEach(java -> jreSelection.getSourceItems().add(java));
+    public void setAvailableJavas(Set<JavaFinder.Java> javas) throws FileNotFoundException {
+        List<JavaFinder.Java> javasFromJson = JavaFinder.jsonToJavas(Launcher.getLauncherFolder().resolve("javas.json"));
+        javas.forEach(java -> {
+            if(!javasFromJson.contains(java))
+                jreSelection.getSourceItems().add(java);
+        });
+        jreSelection.setTargetItems(FXCollections.observableList(javasFromJson));
     }
 
-    public void resetSettingsFromFile() {
+    public void resetSettingsFromFile() throws FileNotFoundException {
         if(settingsChanged) {
             setupSettings(settings);
             String name = selectedLocale.getDisplayLanguage(selectedLocale);
@@ -115,7 +126,7 @@ public class Settings implements Initializable {
         }
     }
 
-    public void setupSettings(Properties settings) {
+    public void setupSettings(Properties settings) throws FileNotFoundException {
         this.settings = settings;
         consoleSwitch.setSelected(Boolean.parseBoolean(this.settings.getProperty("general.console")));
         animationSwitch.setSelected(Boolean.parseBoolean(this.settings.getProperty("general.animation")));
@@ -123,18 +134,6 @@ public class Settings implements Initializable {
         heightField.setText(this.settings.getProperty("minecraft.height"));
         widthField.setText(this.settings.getProperty("minecraft.width"));
         ramSpinner.getValueFactory().setValue(Integer.parseInt(this.settings.getProperty("minecraft.maxram")));
-        //ramSlider.setMin(1024);
-        //ramSlider.setMax(16384);
-        //ramSlider.setMajorTickUnit(1024);
-        //ramSlider.setMinorTickCount(0);
-//        ramSlider.setSnapToTicks(true);
-//        ramSlider.setBlockIncrement(1024);
-//        ramSlider.valueProperty().addListener((obs, oldval, newVal) ->
-//                ramSlider.setValue(newVal.intValue()));
-//        ramSlider.valueProperty().addListener((observableValue, number, t1) -> {
-//            ramSpinner.getValueFactory().setValue(number.intValue());
-//        });
-        //ramSpinner.valueProperty().bind(ramSpinner.valueProperty());
     }
 
     public void setBackButtonHandler(EventHandler<? super MouseEvent> handler) {
