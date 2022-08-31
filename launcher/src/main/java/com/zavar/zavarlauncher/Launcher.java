@@ -41,8 +41,9 @@ public class Launcher extends Application {
     private static FXMLLoader loader;
     private static final Path userHomeFolder = Path.of(System.getProperty("user.home"));
     private static final Path launcherFolder = userHomeFolder.resolve("zavarlauncher2");
-    private final Path tempFolder = launcherFolder.resolve("temp");
-    private final Path jreFolder = launcherFolder.resolve("jre");
+    private static final Path tempFolder = launcherFolder.resolve("temp");
+    private static final Path jreFolder = launcherFolder.resolve("jre");
+    private static final Path minecraftFolder = launcherFolder.resolve("minecraft");
     private static final Path settingsFile = launcherFolder.resolve("settings.properties");
     private static final Properties settings = new Properties();
     private static final Logger logger = LoggerContext.getContext().getLogger(Launcher.class.getName());
@@ -69,6 +70,18 @@ public class Launcher extends Application {
 
     public static Path getLauncherFolder() {
         return launcherFolder;
+    }
+
+    public static Path getMinecraftFolder() {
+        return minecraftFolder;
+    }
+
+    public static Path getTempFolder() {
+        return tempFolder;
+    }
+
+    public static Path getJreFolder() {
+        return jreFolder;
     }
 
     private static void setupVersion() throws IOException {
