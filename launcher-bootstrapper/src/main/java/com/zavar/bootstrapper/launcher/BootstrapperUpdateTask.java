@@ -8,6 +8,7 @@ import javafx.concurrent.Task;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -41,17 +42,28 @@ public class BootstrapperUpdateTask extends Task<Void> {
         if(localVersion.isLowerThan(remoteVersion)) {
             updateTitle("Downloading bootstrapper");
             NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
-            ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(new URL(downloadUrl + remoteBootstrapperInfo.get("path")).openStream()), Util.contentLength(new URL(downloadUrl + remoteBootstrapperInfo.get("path"))));
+            long remoteSize = Util.contentLength(new URL(downloadUrl + remoteBootstrapperInfo.get("path")));
+            ReadableByteChannelWrapper rbc = new ReadableByteChannelWrapper(Channels.newChannel(new URL(downloadUrl + remoteBootstrapperInfo.get("path")).openStream()), remoteSize);
             rbc.getProgressProperty().addListener((observableValue, number, t1) -> {
                 updateProgress((double) observableValue.getValue(), 1);
                 updateMessage(nf.format(observableValue.getValue()));
             });
-            FileOutputStream fileOutputStream = new FileOutputStream(tempFolder + (String) remoteBootstrapperInfo.get("path"));
+            File bootstrapperInstaller = new File(tempFolder + (String) remoteBootstrapperInfo.get("path"));
+            FileOutputStream fileOutputStream = new FileOutputStream(bootstrapperInstaller);
             fileOutputStream.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
             fileOutputStream.close();
-            updateTitle("Starting update");
-            ProcessBuilder processBuilder = new ProcessBuilder(tempFolder + (String) remoteBootstrapperInfo.get("path"));
-            processBuilder.start();
+            if(bootstrapperInstaller.length() == remoteSize) {
+                updateTitle("Starting update");
+                ProcessBuilder processBuilder = new ProcessBuilder(tempFolder + (String) remoteBootstrapperInfo.get("path"));
+                processBuilder.start();
+            } else {
+                updateMessage("");
+                updateProgress(0.0, 1.0);
+                updateTitle("Installer is corrupted, try again");
+                Thread.sleep(5);
+                updateProgress(-1.0, 1.0);
+            }
+
             Platform.exit();
             System.exit(0);
         }
