@@ -36,6 +36,8 @@ public class BootstrapperUpdateTask extends Task<Void> {
         Semver remoteVersion = new Semver((String) remoteBootstrapperInfo.get("version"));
         if (!tempFolder.toFile().exists())
             FileUtils.forceMkdir(tempFolder.toFile());
+        else
+            FileUtils.cleanDirectory(tempFolder.toFile());
         if(localVersion.isLowerThan(remoteVersion)) {
             updateTitle("Downloading bootstrapper");
             NumberFormat nf = NumberFormat.getPercentInstance(Locale.getDefault());
