@@ -12,6 +12,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.util.Duration;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -41,7 +42,7 @@ public class Main implements Initializable {
         settingsFxmlController.setLocalesList(resourceBundle.getLocale(), getAvailableLocales());
         try {
             settingsFxmlController.setAvailableJavas(JavaFinder.find());
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         settingsFxmlController.setOnSettingsSaved(settings -> animationEnable = Boolean.parseBoolean(settings.getProperty("general.animation")));

@@ -26,6 +26,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -47,7 +48,7 @@ public class BootstrapController implements Initializable {
     private final Path tempFolder = launcherFolder.resolve("temp");
     private final Path jreFolder = launcherFolder.resolve("jre");
     private final Set<JavaFinder.Java> javas;
-
+    private final Set<Integer> installedJavas = new HashSet<>();
     private final BootstrapConfig config;
     private JreManager jreManager;
     private final ExecutorService executorService;
@@ -59,6 +60,8 @@ public class BootstrapController implements Initializable {
             FileUtils.forceMkdir(launcherFolder.toFile());
         if(tempFolder.toFile().exists())
             FileUtils.deleteDirectory(tempFolder.toFile());
+        if(!jreFolder.toFile().exists())
+            FileUtils.forceMkdir(jreFolder.toFile());
         config = new BootstrapConfig();
         executorService = Executors.newCachedThreadPool();
         javas = JavaFinder.find();
@@ -115,6 +118,7 @@ public class BootstrapController implements Initializable {
             });
 
             final Task<Void> launcherUpdateTask = new LauncherUpdateTask(launcherFolder, availableIp + config.getLauncherDownloadUrl(), config.getLatestLauncherUrl());
+
             jreDownloadTask.setOnSucceeded(workerStateEvent -> {
                 Bootstrapper.setOnCloseEvent((windowEvent) -> {
                     if(!launcherUpdateTask.isRunning()) {
@@ -138,6 +142,16 @@ public class BootstrapController implements Initializable {
             });
 
             launcherUpdateTask.setOnSucceeded(workerStateEvent -> {
+                try {
+                    jreManager.getSupportedVersions().forEach(v -> {
+                        if (jreManager.isJreExists(v))
+                            installedJavas.add(v);
+                    });
+                } catch (IOException e) {
+                    Util.showErrorDialog(e, e.getMessage());
+                    Platform.exit();
+                    System.exit(0);
+                }
                 launch();
             });
 
@@ -176,12 +190,13 @@ public class BootstrapController implements Initializable {
             });
             info.setText("Starting");
             bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+            installedJavas.addAll(JreManager.getLocalJreVersionsList(jreFolder));
             launch();
         }
     }
 
     private void launch() {
-        LauncherStartTask launcherStartTask = new LauncherStartTask(launcherFolder, javas, jreManager);
+        LauncherStartTask launcherStartTask = new LauncherStartTask(launcherFolder, javas, jreManager, installedJavas, jreFolder);
         launcherStartTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
             Util.showErrorDialog(t1, observableValue.getValue().toString());
         });

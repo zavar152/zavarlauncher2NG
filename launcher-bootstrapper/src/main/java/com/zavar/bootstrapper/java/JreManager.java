@@ -1,15 +1,21 @@
 package com.zavar.bootstrapper.java;
 
 import com.zavar.bootstrapper.util.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.json.JSONArray;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public class JreManager {
 
@@ -33,6 +39,24 @@ public class JreManager {
             return Files.exists(jreFolderPath.resolve(version.toString()).resolve("bin").resolve("java.exe"));
         else
             return Files.exists(jreFolderPath.resolve(version.toString()).resolve("bin").resolve("java"));
+    }
+
+    //TODO only windows support
+    public static Set<Integer> getLocalJreVersionsList(Path jreFolderPath) {
+        Set<Integer> versions = new HashSet<>();
+        try(Stream<Path> paths = Files.list(jreFolderPath)) {
+            paths.forEach(path -> {
+                File file = path.toFile();
+                if(Files.isDirectory(path) && StringUtils.isNumeric(file.getName())) {
+                    if(Files.exists(jreFolderPath.resolve(file.getName()).resolve("bin").resolve("java.exe"))) {
+                        versions.add(Integer.parseInt(file.getName()));
+                    }
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return versions;
     }
 
     //TODO only windows support

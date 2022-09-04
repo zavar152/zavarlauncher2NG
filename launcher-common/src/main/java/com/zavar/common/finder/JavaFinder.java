@@ -13,10 +13,7 @@ import org.apache.commons.lang3.SystemUtils;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public final class JavaFinder {
     private static final Gson GSON;
@@ -67,8 +64,14 @@ public final class JavaFinder {
         fileWriter.close();
     }
 
-    public static List<Java> jsonToJavas(Path path) throws FileNotFoundException {
-        return GSON.fromJson(new FileReader(path.toFile()), new TypeToken<List<Java>>(){}.getType());
+    public static List<Java> jsonToJavas(Path path) throws IOException {
+        try {
+            return GSON.fromJson(new FileReader(path.toFile()), new TypeToken<List<Java>>(){}.getType());
+        } catch (FileNotFoundException e) {
+            List<Java> temp = Collections.emptyList();
+            javasToJson(temp, path);
+            return temp;
+        }
     }
 
     private static int getVersion(String version) {

@@ -55,6 +55,8 @@ public class Launcher extends Application {
         System.setOut(new PrintStream(new Console.StreamCapturer(System.out, consoleTextArea::appendText)));
         System.setErr(new PrintStream(new Console.StreamCapturer(System.err, consoleTextArea::appendText)));
         setupVersion();
+        if(!Files.exists(launcherFolder))
+            Files.createDirectory(launcherFolder);
         if (!Files.exists(settingsFile)) {
             logger.info("Settings file created");
             Files.copy(Objects.requireNonNull(Launcher.class.getResource("settings/default.properties")).openStream(), settingsFile);

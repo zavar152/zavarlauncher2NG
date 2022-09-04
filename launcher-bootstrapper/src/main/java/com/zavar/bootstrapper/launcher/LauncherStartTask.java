@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -20,11 +21,15 @@ public class LauncherStartTask extends Task<Void> {
     private final Path launcherFolder;
     private final Set<JavaFinder.Java> javas;
     private final JreManager jreManager;
+    private final Set<Integer> installedJavas;
+    private final Path jreFolder;
 
-    public LauncherStartTask(Path launcherFolder, Set<JavaFinder.Java> javas, JreManager jreManager) {
+    public LauncherStartTask(Path launcherFolder, Set<JavaFinder.Java> javas, JreManager jreManager, Set<Integer> installedJavas, Path jreFolder) {
         this.launcherFolder = launcherFolder;
         this.javas = javas;
         this.jreManager = jreManager;
+        this.installedJavas = installedJavas;
+        this.jreFolder = jreFolder;
     }
 
     @Override
@@ -49,6 +54,9 @@ public class LauncherStartTask extends Task<Void> {
                 processBuilder.start();
             } else if (javas.stream().anyMatch(java -> java.version() >= launcherJavaVersion)) {
                 ProcessBuilder processBuilder = new ProcessBuilder(javas.stream().filter(java -> java.version() >= launcherJavaVersion).findFirst().get().home().resolve("bin").resolve("java.exe").toString(), "-jar", launcherFolder.resolve("launcher.jar").toString());
+                processBuilder.start();
+            } else if (installedJavas.stream().anyMatch(integer -> integer == launcherJavaVersion)) {
+                ProcessBuilder processBuilder = new ProcessBuilder(jreFolder.resolve(Paths.get(String.valueOf(installedJavas.stream().filter(integer -> integer == launcherJavaVersion).findFirst().get()))).resolve("bin").resolve("java.exe").toString(), "-jar", launcherFolder.resolve("launcher.jar").toString());
                 processBuilder.start();
             } else {
                 throw new InstantiationException("Java " + launcherJavaVersion + " couldn't be found");

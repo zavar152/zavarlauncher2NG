@@ -107,7 +107,7 @@ public class Settings implements Initializable {
         });
     }
 
-    public void setAvailableJavas(Set<JavaFinder.Java> javas) throws FileNotFoundException {
+    public void setAvailableJavas(Set<JavaFinder.Java> javas) throws IOException {
         List<JavaFinder.Java> javasFromJson = JavaFinder.jsonToJavas(Launcher.getLauncherFolder().resolve("javas.json"));
         javas.forEach(java -> {
             if(!javasFromJson.contains(java))
