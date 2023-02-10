@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 
 public class BootstrapConfig {
 
@@ -22,7 +23,7 @@ public class BootstrapConfig {
     private String bootstrapDownloadUrl = null;
     private String latestBootstrapUrl = null;
     private String mainIp = null;
-    private String availableIp = null;
+    private String imgDownloadUrl = null;
 
     public BootstrapConfig() throws IOException {
         ips = new ArrayList<>();
@@ -42,42 +43,8 @@ public class BootstrapConfig {
         return ips;
     }
 
-    public String getAvailableIp() throws NullPointerException {
-        if(Objects.isNull(availableIp)) {
-            int timeout = Integer.parseInt(requireNonEmpty(bootstrapProperties.getProperty("pingTimeout"), "pingTimeout is missing"));
-            List<String> ips = getAllIps();
-            ips.remove(mainIp);
-            if(pingHost(mainIp, timeout)) {
-                availableIp = mainIp;
-                return mainIp;
-            }
-
-            for (String value : ips) {
-                if (pingHost(value, timeout)) {
-                    availableIp = value;
-                    return value;
-                }
-            }
-            if(Objects.isNull(availableIp)) {
-                throw new NullPointerException("Server is offline");
-            }
-        }
-        return availableIp;
-    }
-
-    private boolean pingHost(String host, int timeout) {
-        try {
-            URL urlObj = new URL(host);
-            HttpURLConnection con = (HttpURLConnection) urlObj.openConnection();
-            con.setRequestMethod("HEAD");
-            con.setConnectTimeout(timeout);
-            con.connect();
-
-            int code = con.getResponseCode();
-            return code == 200;
-        } catch (Exception e) {
-            return false;
-        }
+    public Integer getTimeout() {
+        return Integer.parseInt(requireNonEmpty(bootstrapProperties.getProperty("pingTimeout"), "pingTimeout is missing"));
     }
 
     public Semver getBootstrapVersion() throws IOException {
@@ -123,6 +90,12 @@ public class BootstrapConfig {
         if(Objects.isNull(latestBootstrapUrl))
             latestBootstrapUrl = requireNonEmpty(bootstrapProperties.getProperty("latestBootstrapUrl"), "Latest file url is missing");
         return latestBootstrapUrl;
+    }
+
+    public String getImgDownloadUrl() {
+        if(Objects.isNull(imgDownloadUrl))
+            imgDownloadUrl = requireNonEmpty(bootstrapProperties.getProperty("imgDownloadUrl"), "Img url is missing");
+        return imgDownloadUrl;
     }
 
     public String getJreListUrl() {

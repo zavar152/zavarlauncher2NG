@@ -5,9 +5,11 @@ import com.github.plushaze.traynotification.notification.Notifications;
 import com.github.plushaze.traynotification.notification.TrayNotification;
 import com.zavar.bootstrapper.Bootstrapper;
 import com.zavar.bootstrapper.config.BootstrapConfig;
+import com.zavar.bootstrapper.config.GetAvailableServerTask;
 import com.zavar.bootstrapper.java.JreDownloadTask;
 import com.zavar.bootstrapper.java.JreManager;
 import com.zavar.bootstrapper.launcher.BootstrapperUpdateTask;
+import com.zavar.bootstrapper.launcher.ImgUpdateTask;
 import com.zavar.bootstrapper.launcher.LauncherStartTask;
 import com.zavar.bootstrapper.launcher.LauncherUpdateTask;
 import com.zavar.bootstrapper.util.Util;
@@ -26,7 +28,6 @@ import org.apache.commons.io.FileUtils;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -47,6 +48,7 @@ public class BootstrapController implements Initializable {
     private final Path launcherFolder = userHomeFolder.resolve("zavarlauncher2");
     private final Path tempFolder = launcherFolder.resolve("temp");
     private final Path jreFolder = launcherFolder.resolve("jre");
+    private final Path imgFolder = launcherFolder.resolve("img");
     private final Set<JavaFinder.Java> javas;
     private final Set<Integer> installedJavas = new HashSet<>();
     private final BootstrapConfig config;
@@ -56,29 +58,56 @@ public class BootstrapController implements Initializable {
     private String availableIp;
 
     public BootstrapController() throws IOException {
-        if(!launcherFolder.toFile().exists())
+        if (!launcherFolder.toFile().exists())
             FileUtils.forceMkdir(launcherFolder.toFile());
-        if(tempFolder.toFile().exists())
+        if (tempFolder.toFile().exists())
             FileUtils.deleteDirectory(tempFolder.toFile());
-        if(!jreFolder.toFile().exists())
+        if (!jreFolder.toFile().exists())
             FileUtils.forceMkdir(jreFolder.toFile());
         config = new BootstrapConfig();
         executorService = Executors.newCachedThreadPool();
         javas = JavaFinder.find();
         System.out.println(javas);
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+
         try {
-            availableIp = config.getAvailableIp();
-            jreManager = new JreManager(new URL(config.getJreDownloadUrl(availableIp)), jreFolder, config.getJreListUrl());
-            isOffline = false;
-        } catch (NullPointerException | MalformedURLException e) {
+            List<String> allIps = config.getAllIps();
+            allIps.remove(config.getMainIp());
+            Task<String> getAvailableServerTask = new GetAvailableServerTask(allIps, config.getMainIp(), config.getTimeout());
+            info.textProperty().bind(getAvailableServerTask.titleProperty());
+            bar.progressProperty().bind(getAvailableServerTask.progressProperty());
+            progressInfo.textProperty().bind(getAvailableServerTask.messageProperty());
+            executorService.submit(getAvailableServerTask);
+
+            getAvailableServerTask.setOnSucceeded(workerStateEvent -> {
+                info.textProperty().unbind();
+                progressInfo.textProperty().unbind();
+                bar.progressProperty().unbind();
+                availableIp = (String) workerStateEvent.getSource().getValue();
+                if (!availableIp.isEmpty()) {
+                    try {
+                        jreManager = new JreManager(new URL(config.getJreDownloadUrl(availableIp)), jreFolder, config.getJreListUrl());
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
+                    }
+                    isOffline = false;
+                }
+                postInit();
+            });
+        } catch (RuntimeException e) {
             TrayNotification tray = new TrayNotification("Bootstrapper warning", e.getMessage(), Notifications.WARNING);
             tray.setTrayIcon(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/img/icon.png"))));
             tray.setAnimation(Animations.POPUP);
             tray.showAndDismiss(Duration.millis(3500));
         }
+
+
     }
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
+
+    private void postInit() {
         if (!isOffline) {
             bar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
 
@@ -121,7 +150,7 @@ public class BootstrapController implements Initializable {
 
             jreDownloadTask.setOnSucceeded(workerStateEvent -> {
                 Bootstrapper.setOnCloseEvent((windowEvent) -> {
-                    if(!launcherUpdateTask.isRunning()) {
+                    if (!launcherUpdateTask.isRunning()) {
                         Platform.exit();
                         System.exit(0);
                     } else {
@@ -157,7 +186,7 @@ public class BootstrapController implements Initializable {
 
             bootstrapperUpdateTask.setOnSucceeded(workerStateEvent -> {
                 Bootstrapper.setOnCloseEvent((windowEvent) -> {
-                    if(!jreDownloadTask.isRunning()) {
+                    if (!jreDownloadTask.isRunning()) {
                         Platform.exit();
                         System.exit(0);
                     } else {
@@ -170,19 +199,45 @@ public class BootstrapController implements Initializable {
                 executorService.submit(jreDownloadTask);
             });
 
-            Task<Void> finalBootstrapperUpdateTask = bootstrapperUpdateTask;
+            bootstrapperUpdateTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
+                Util.showErrorDialog(t1, observableValue.getValue().toString());
+            });
+
+            Task<Void> imgUpdateTask = new ImgUpdateTask(launcherFolder, availableIp + config.getImgDownloadUrl(), imgFolder);
+
+            imgUpdateTask.exceptionProperty().addListener((observableValue, throwable, t1) -> {
+                Util.showErrorDialog(t1, observableValue.getValue().toString());
+            });
+
             Bootstrapper.setOnCloseEvent((windowEvent) -> {
-                if(!finalBootstrapperUpdateTask.isRunning()) {
+                if (!imgUpdateTask.isRunning()) {
                     Platform.exit();
                     System.exit(0);
                 } else {
                     windowEvent.consume();
                 }
             });
-            info.textProperty().bind(bootstrapperUpdateTask.titleProperty());
-            bar.progressProperty().bind(bootstrapperUpdateTask.progressProperty());
-            progressInfo.textProperty().bind(bootstrapperUpdateTask.messageProperty());
-            executorService.submit(bootstrapperUpdateTask);
+            info.textProperty().bind(imgUpdateTask.titleProperty());
+            progressInfo.textProperty().bind(imgUpdateTask.messageProperty());
+            bar.progressProperty().bind(imgUpdateTask.progressProperty());
+            executorService.submit(imgUpdateTask);
+
+            Task<Void> finalBootstrapperUpdateTask = bootstrapperUpdateTask;
+            imgUpdateTask.setOnSucceeded(workerStateEvent -> {
+                Bootstrapper.setOnCloseEvent((windowEvent) -> {
+                    if (!finalBootstrapperUpdateTask.isRunning()) {
+                        Platform.exit();
+                        System.exit(0);
+                    } else {
+                        windowEvent.consume();
+                    }
+                });
+                info.textProperty().bind(finalBootstrapperUpdateTask.titleProperty());
+                bar.progressProperty().bind(finalBootstrapperUpdateTask.progressProperty());
+                progressInfo.textProperty().bind(finalBootstrapperUpdateTask.messageProperty());
+                executorService.submit(finalBootstrapperUpdateTask);
+            });
+
         } else {
             Bootstrapper.setOnCloseEvent((windowEvent) -> {
                 Platform.exit();

@@ -7,8 +7,6 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import jfxtras.styles.jmetro.JMetro;
-import jfxtras.styles.jmetro.Style;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -31,8 +29,8 @@ public class Bootstrapper extends Application {
         splashStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/img/icon.png"))));
         splashStage.setResizable(false);
         Scene scene = new Scene(FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxml/bootstrap.fxml"))), 300, 50);
-        JMetro jMetro = new JMetro(Style.LIGHT);
-        jMetro.setScene(scene);
+        //JMetro jMetro = new JMetro(Style.LIGHT);
+        //jMetro.setScene(scene);
         splashStage.setScene(scene);
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/bootstrap.css")).toExternalForm());
         splashStage.setTitle("ZL2 Bootstrapper");

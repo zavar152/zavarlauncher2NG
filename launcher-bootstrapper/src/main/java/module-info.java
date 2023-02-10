@@ -11,9 +11,9 @@ module com.zavar.bootstrapper {
     requires TrayNotification.master;
     requires com.zavar.launcher.common;
     requires zip4j;
-    requires org.jfxtras.styles.jmetro;
     requires org.apache.commons.lang3;
     requires semver4j;
+    requires org.jsoup;
 
     opens com.zavar.bootstrapper to javafx.fxml;
     opens com.zavar.bootstrapper.controller to javafx.fxml;

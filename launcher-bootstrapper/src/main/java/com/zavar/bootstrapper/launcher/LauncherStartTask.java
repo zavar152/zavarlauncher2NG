@@ -39,7 +39,6 @@ public class LauncherStartTask extends Task<Void> {
         if (launcherFile.exists()) {
             if(!launcherJarFile.isValidZipFile())
                 throw new IllegalAccessException("Launcher is corrupted");
-
             URL versionPath = new URL("jar:file:" + launcherFolder + "/launcher.jar!/version.properties");
             Properties properties = new Properties();
             JarURLConnection jarConn = (JarURLConnection) versionPath.openConnection();
@@ -65,7 +64,6 @@ public class LauncherStartTask extends Task<Void> {
         } else {
             throw new FileNotFoundException("Launcher not found");
         }
-
         return null;
     }
 }
