@@ -93,6 +93,13 @@
     -fx-border-radius: 10;
 }
 
+.toggle-switch:hover .thumb-area {
+    -fx-background-color: #55c786;
+    -fx-border-color: #a4b7b4;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
 #jreSelection {
     -fx-border-color: #b7efe5;
     -fx-border-radius: 10;
@@ -102,7 +109,44 @@
     -fx-background-color: #c4dcd8;
     -fx-border-color: #b7efe5;
     -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: rgba(255, 255, 255, 0);
+    -fx-border-width: 1;
     -fx-border-radius: 3;
+}
+
+.combo-box .list-cell:hover {
+    -fx-background-color: #55c786;
+    -fx-background-radius: 10;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+}
+
+.combo-box:hover {
+    -fx-background-color: #55c786;
+}
+
+.combo-box .list-view {
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.list-selection-view .grid-pane .list-action-view .container .list-view {
+    -fx-background-color: #c4dcd8;
+}
+
+.list-selection-view .grid-pane .list-action-view .container .list-view .list-cell {
+    -fx-background-color: #c4dcd8;
+    -fx-background-radius: 10;
+}
+
+.list-selection-view .grid-pane .list-action-view .container .list-view .list-cell:hover {
+    -fx-background-color: #55c786;
+    -fx-background-radius: 10;
 }
 
 addJre {

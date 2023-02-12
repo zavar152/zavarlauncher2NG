@@ -9,8 +9,6 @@ module com.zavar.zavarlauncher {
     requires org.apache.commons.net;
     requires org.apache.commons.io;
     requires org.apache.commons.lang3;
-    requires jmccc;
-    requires jmccc.yggdrasil.authenticator;
     requires org.apache.logging.log4j.core;
     requires semver4j;
 

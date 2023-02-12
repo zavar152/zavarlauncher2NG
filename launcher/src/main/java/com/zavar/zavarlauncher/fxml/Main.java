@@ -1,6 +1,7 @@
 package com.zavar.zavarlauncher.fxml;
 
 import com.zavar.common.finder.JavaFinder;
+import com.zavar.zavarlauncher.Launcher;
 import javafx.animation.FadeTransition;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Main implements Initializable {
     @FXML
-    private Button playButton, settingsButton, updateButton, folderButton;
+    private Button playButton, settingsButton, updateButton, folderButton, consoleButton;
     @FXML
     private ImageView backgroundImage;
     @FXML
@@ -29,6 +30,7 @@ public class Main implements Initializable {
     @FXML
     private Settings settingsFxmlController;
 
+    private Properties settings;
     private final FadeTransition fadeSettingsTransition = new FadeTransition(Duration.millis(500));
     private final FadeTransition fadeMainControlsTransition = new FadeTransition(Duration.millis(500));
     private final FadeTransition fadeMainBackgroundTransition = new FadeTransition(Duration.millis(500));
@@ -59,6 +61,14 @@ public class Main implements Initializable {
                 }
             }
         });
+        consoleButton.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                if(Launcher.isConsoleShowing())
+                    Launcher.hideConsole();
+                else
+                    Launcher.showConsole(resourceBundle);
+            }
+        });
         ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
         sch.scheduleWithFixedDelay(new Task<Void>() {
             @Override
@@ -86,6 +96,7 @@ public class Main implements Initializable {
         settingsFxml.setDisable(false);
         fadeSettingsTransition.play();
         playButton.setDisable(true);
+        consoleButton.setDisable(true);
         folderButton.setDisable(true);
         updateButton.setDisable(true);
     }
@@ -109,6 +120,7 @@ public class Main implements Initializable {
         playButton.setDisable(false);
         folderButton.setDisable(false);
         updateButton.setDisable(false);
+        consoleButton.setDisable(false);
     }
 
     private void openMain() {
@@ -153,6 +165,7 @@ public class Main implements Initializable {
     }
 
     public void setupSettings(Properties settings) throws FileNotFoundException {
+        this.settings = settings;
         animationEnable = Boolean.parseBoolean(settings.getProperty("general.animation"));
         settingsFxmlController.setupSettings(settings);
     }

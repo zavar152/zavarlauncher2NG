@@ -27,6 +27,6 @@ public class BuilderLauncher {
             FileUtils.forceMkdir(manifestFolder.toFile());
 
         MinecraftInstance.MinecraftInstanceConfiguration minecraftInstanceConfiguration = MinecraftInstance.prepareNewConfiguration("GlebAndTest", new Semver("1.12.2"), 8, launcherFolder.resolve("minecraft"), userHomeFolder.resolve(".glebTest"), new URI("http://${server.ip}/3/minecraft/GlebAndTest"));
-        MinecraftInstance.
+        //MinecraftInstance.
     }
 }

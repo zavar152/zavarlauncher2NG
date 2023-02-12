@@ -11,7 +11,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -47,15 +50,14 @@ public class Launcher extends Application {
     private static final Path settingsFile = launcherFolder.resolve("settings.properties");
     private static final Properties settings = new Properties();
     private static final Logger logger = LoggerContext.getContext().getLogger(Launcher.class.getName());
-    private static final TextArea consoleTextArea = new TextArea();
+    private static TextArea consoleTextArea;
     private static Semver launcherVersion;
     private static int launcherJavaVersion;
 
     public static void main(String[] args) throws IOException {
-        System.setOut(new PrintStream(new Console.StreamCapturer(System.out, consoleTextArea::appendText)));
-        System.setErr(new PrintStream(new Console.StreamCapturer(System.err, consoleTextArea::appendText)));
         setupVersion();
-        if(!Files.exists(launcherFolder))
+        Platform.startup(Launcher::setupConsole);
+        if (!Files.exists(launcherFolder))
             Files.createDirectory(launcherFolder);
         if (!Files.exists(settingsFile)) {
             logger.info("Settings file created");
@@ -99,6 +101,15 @@ public class Launcher extends Application {
 
     public static int getLauncherJavaVersion() {
         return launcherJavaVersion;
+    }
+
+    public static void setupConsole() {
+        consoleTextArea = new TextArea();
+        consoleTextArea.setEditable(false);
+        consoleTextArea.fontProperty().setValue(Font.font("Monospace", FontWeight.MEDIUM, 14));
+        consoleTextArea.setWrapText(true);
+        System.setOut(new PrintStream(new Console.StreamCapturer(System.out, consoleTextArea::appendText)));
+        System.setErr(new PrintStream(new Console.StreamCapturer(System.err, consoleTextArea::appendText)));
     }
 
     public static void saveSettings() throws IOException {
@@ -163,7 +174,7 @@ public class Launcher extends Application {
                 mainController.openSettings();
                 return null;
             }
-        }, 1, 1, TimeUnit.SECONDS);
+        }, 900, 900, TimeUnit.MILLISECONDS);
         System.gc();
     }
 
@@ -198,36 +209,44 @@ public class Launcher extends Application {
         super.init();
     }
 
-    public static void showConsole(ResourceBundle resourceBundle) throws IOException {
+    public static void showConsole(ResourceBundle resourceBundle) {
         logger.info("Starting console");
         if (Objects.nonNull(consoleStage))
             consoleStage.hide();
         else
             consoleStage = new Stage();
         FXMLLoader fxmlLoader = new FXMLLoader(Objects.requireNonNull(Launcher.class.getResource("fxml/console.fxml")), resourceBundle);
-        AnchorPane consoleRoot = fxmlLoader.load();
+        AnchorPane consoleRoot = null;
+        try {
+            consoleRoot = fxmlLoader.load();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         AnchorPane.setBottomAnchor(consoleTextArea, 0.0D);
         AnchorPane.setTopAnchor(consoleTextArea, 0.0D);
         AnchorPane.setRightAnchor(consoleTextArea, 0.0D);
         AnchorPane.setLeftAnchor(consoleTextArea, 0.0D);
         consoleRoot.getChildren().add(consoleTextArea);
         consoleStage.setMinHeight(400);
-        consoleStage.setMinWidth(600);
-        consoleStage.setWidth(600);
+        consoleStage.setMinWidth(700);
+        consoleStage.setWidth(700);
         consoleStage.setHeight(400);
-        consoleStage.setScene(new Scene(consoleRoot, 600, 400));
+        consoleStage.setScene(new Scene(consoleRoot, 700, 400));
         consoleStage.setTitle("ZL Console");
         consoleStage.getIcons().add(icon);
         consoleStage.setX(0);
         consoleStage.setY(5);
+        consoleStage.resizableProperty().setValue(false);
         consoleStage.show();
     }
 
-    public static void hideConsole() throws IOException {
+    public static void hideConsole() {
         logger.info("Hiding console");
         if (Objects.nonNull(consoleStage))
             consoleStage.hide();
     }
 
-
+    public static boolean isConsoleShowing() {
+        return Objects.nonNull(consoleStage) && consoleStage.isShowing();
+    }
 }

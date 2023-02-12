@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>launcher-bootstrapper</artifactId>
-    <version>1.1.4</version>
+    <version>1.1.5</version>
     <dependencies>
         <dependency>
             <groupId>org.jetbrains</groupId>
@@ -66,7 +66,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.zavar.bootstrapper/com.zavar.bootstrapper.Bootstrapper</mainClass>
+                            <mainClass>com.zavar.bootstrapper/com.zavar.bootstrapper.BootstrapperJar</mainClass>
                         </configuration>
                     </execution>
                 </executions>

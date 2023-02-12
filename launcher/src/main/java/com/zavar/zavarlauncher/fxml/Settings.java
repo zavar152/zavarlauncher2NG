@@ -31,8 +31,6 @@ public class Settings implements Initializable {
     private TextField heightField, widthField;
     @FXML
     private Spinner<Integer> ramSpinner;
-    @FXML
-    private Slider ramSlider;
     private final HashMap<String, Locale> locales = new HashMap<>();
     private Locale selectedLocale;
     private Properties settings;
@@ -50,10 +48,8 @@ public class Settings implements Initializable {
             if(settingsChanged) {
                 String value = langBox.valueProperty().getValue();
                 try {
-                    if(consoleSwitch.isSelected() && !Boolean.parseBoolean(settings.getProperty("general.console")))
+                    if(consoleSwitch.isSelected() && !Boolean.parseBoolean(settings.getProperty("general.console")) && !Launcher.isConsoleShowing())
                         Launcher.showConsole(resourceBundle);
-                    else if(!consoleSwitch.isSelected() && Boolean.parseBoolean(settings.getProperty("general.console")))
-                        Launcher.hideConsole();
                     JavaFinder.javasToJson(jreSelection.getTargetItems().stream().toList(), Launcher.getLauncherFolder().resolve("javas.json"));
                     settings.setProperty("general.animation", String.valueOf(animationSwitch.isSelected()));
                     settings.setProperty("general.console", String.valueOf(consoleSwitch.isSelected()));

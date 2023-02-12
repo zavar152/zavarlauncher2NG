@@ -7,7 +7,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>launcher-bootstrapper</artifactId>
-  <version>1.1.4</version>
+  <version>1.1.5</version>
   <build>
     <plugins>
       <plugin>
@@ -45,7 +45,7 @@
           <execution>
             <id>default-cli</id>
             <configuration>
-              <mainClass>com.zavar.bootstrapper/com.zavar.bootstrapper.Bootstrapper</mainClass>
+              <mainClass>com.zavar.bootstrapper/com.zavar.bootstrapper.BootstrapperJar</mainClass>
             </configuration>
           </execution>
         </executions>
