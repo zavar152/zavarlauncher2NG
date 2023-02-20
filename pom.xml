@@ -15,6 +15,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>repo.u-team.info</id>
+            <url>https://repo.u-team.info</url>
+        </repository>
     </repositories>
 
     <modules>
@@ -99,6 +103,11 @@
             <classifier>win</classifier>
         </dependency>
         <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>17.0.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.vdurmont</groupId>
             <artifactId>semver4j</artifactId>
             <version>3.1.0</version>
@@ -112,6 +121,11 @@
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.15.3</version>
+        </dependency>
+        <dependency>
+            <groupId>net.hycrafthd</groupId>
+            <artifactId>minecraft_authenticator</artifactId>
+            <version>3.0.2</version>
         </dependency>
     </dependencies>
 </project>
