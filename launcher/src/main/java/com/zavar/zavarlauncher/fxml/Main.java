@@ -1,11 +1,15 @@
 package com.zavar.zavarlauncher.fxml;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpServer;
 import com.zavar.common.finder.JavaFinder;
 import com.zavar.zavarlauncher.auth.AuthConstants;
 import com.zavar.zavarlauncher.Launcher;
 import com.zavar.zavarlauncher.auth.http.AuthHttpHandler;
+import com.zavar.zavarlauncher.auth.pojo.AuthProfileResponse;
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -18,17 +22,21 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.util.Duration;
 import net.hycrafthd.minecraft_authenticator.login.AuthenticationException;
+import net.hycrafthd.minecraft_authenticator.login.AuthenticationFile;
 import net.hycrafthd.minecraft_authenticator.login.Authenticator;
 import net.hycrafthd.minecraft_authenticator.login.User;
+import net.hycrafthd.minecraft_authenticator.util.AuthenticationFileUtil;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
+import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.InetSocketAddress;
-import java.net.URL;
+import java.net.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -62,46 +70,7 @@ public class Main implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        avatar.setOnMouseClicked(mouseEvent -> {
-            browser.setDisable(false);
-            browser.setVisible(true);
-            CookieManager manager = new CookieManager();
-            CookieHandler.setDefault(manager);
-            manager.getCookieStore().removeAll();
-
-            try {
-                httpServer = HttpServer.create(new InetSocketAddress(8000), 0);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            AuthHttpHandler authHttpHandler = new AuthHttpHandler();
-
-            WebEngine engine = browser.getEngine();
-            authHttpHandler.addCodeReturnListener(evt -> {
-                logger.info(evt.getNewValue());
-                httpServer.stop(0);
-                browser.setDisable(true);
-                browser.setVisible(false);
-
-                final Authenticator authenticator = Authenticator.ofMicrosoft((String) evt.getNewValue()).
-                        customAzureApplication(AuthConstants.CLIENT_ID, AuthConstants.REDIRECT_URI).shouldAuthenticate().build();
-                try {
-                    authenticator.run();
-                    final Optional<User> user = authenticator.getUser();
-                    System.out.println(user);
-                } catch (AuthenticationException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-            httpServer.createContext("/", authHttpHandler);
-            httpServer.setExecutor(serverExecutorService);
-            httpServer.start();
-            logger.info("Auth server started");
-
-            engine.load(String.valueOf(Authenticator.microsoftLogin(AuthConstants.CLIENT_ID, AuthConstants.REDIRECT_URI)));
-            logger.info("Opening Microsoft auth page...");
-        });
+        avatar.setOnMouseClicked(mouseEvent -> auth());
         fadeMainBackgroundTransition.setNode(mainMenuBackgroundPane);
         fadeMainControlsTransition.setNode(mainMenuControlsPane);
         closeMain();
@@ -127,7 +96,7 @@ public class Main implements Initializable {
         });
         consoleButton.setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
-                if(Launcher.isConsoleShowing())
+                if (Launcher.isConsoleShowing())
                     Launcher.hideConsole();
                 else
                     Launcher.showConsole(resourceBundle);
@@ -189,13 +158,13 @@ public class Main implements Initializable {
 
     private void openMain() {
         fadeMainBackgroundTransition.stop();
-        if(animationEnable)
+        if (animationEnable)
             fadeMainBackgroundTransition.setFromValue(0);
         else
             fadeMainBackgroundTransition.setFromValue(0.3);
         fadeMainBackgroundTransition.setToValue(0.3);
         fadeMainControlsTransition.stop();
-        if(animationEnable)
+        if (animationEnable)
             fadeMainControlsTransition.setFromValue(0);
         else
             fadeMainControlsTransition.setFromValue(1.0);
@@ -206,13 +175,13 @@ public class Main implements Initializable {
 
     private void closeMain() {
         fadeMainBackgroundTransition.stop();
-        if(animationEnable)
+        if (animationEnable)
             fadeMainBackgroundTransition.setFromValue(0.3);
         else
             fadeMainBackgroundTransition.setFromValue(0);
         fadeMainBackgroundTransition.setToValue(0);
         fadeMainControlsTransition.stop();
-        if(animationEnable)
+        if (animationEnable)
             fadeMainControlsTransition.setFromValue(1.0);
         else
             fadeMainControlsTransition.setFromValue(0);
@@ -234,7 +203,78 @@ public class Main implements Initializable {
         settingsFxmlController.setupSettings(settings);
     }
 
-    private void auth(String code) {
-        System.out.println(code);
+    private void auth() {
+        browser.setDisable(false);
+        browser.setVisible(true);
+        CookieManager manager = new CookieManager();
+        CookieHandler.setDefault(manager);
+        manager.getCookieStore().removeAll();
+
+        try {
+            httpServer = HttpServer.create(new InetSocketAddress(8000), 0);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        AuthHttpHandler authHttpHandler = new AuthHttpHandler();
+
+        WebEngine engine = browser.getEngine();
+        authHttpHandler.addCodeReturnListener(evt -> {
+            logger.info(evt.getNewValue());
+            httpServer.stop(0);
+            Authenticator authenticator;
+            if(Files.exists(Launcher.getAccountFile())) {
+                try {
+                    AuthenticationFile authenticationFile = AuthenticationFileUtil.fromCompressedInputStream(Files.newInputStream(Launcher.getAccountFile()));
+                    authenticator = Authenticator.of(authenticationFile).
+                            customAzureApplication(AuthConstants.CLIENT_ID, AuthConstants.REDIRECT_URI).shouldAuthenticate().build();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                authenticator = Authenticator.ofMicrosoft((String) evt.getNewValue()).
+                        customAzureApplication(AuthConstants.CLIENT_ID, AuthConstants.REDIRECT_URI).shouldAuthenticate().build();
+            }
+
+            try {
+                authenticator.run(); //wait for finish
+                Platform.runLater(() -> {
+                    browser.setDisable(true);
+                    browser.setVisible(false);
+                });
+                Optional<User> user = authenticator.getUser();
+                System.out.println(user);
+
+                AuthenticationFile file = authenticator.getResultFile();
+                file.writeCompressed(Files.newOutputStream(Launcher.getAccountFile()));
+
+                if(user.isPresent()) {
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(new URI(AuthConstants.PROFILE_URL))
+                            .header("Authorization", "Bearer " + user.get().accessToken())
+                            .GET()
+                            .build();
+                    HttpClient httpClient = HttpClient.newHttpClient();
+                    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                    if(response.statusCode() == 200) {
+                        System.out.println(response.body());
+                        JSONObject jsonObject = new JSONObject(response.body());
+                        System.out.println(jsonObject.getJSONArray("skins").getJSONObject(0).get("url"));
+                    } else {
+
+                    }
+                }
+            } catch (AuthenticationException | URISyntaxException | InterruptedException | IOException e) {
+                logger.error(e.getMessage());
+                throw new RuntimeException(e);
+            }
+        });
+        httpServer.createContext("/", authHttpHandler);
+        httpServer.setExecutor(serverExecutorService);
+        httpServer.start();
+        logger.info("Auth server started");
+
+        engine.load(String.valueOf(Authenticator.microsoftLogin(AuthConstants.CLIENT_ID, AuthConstants.REDIRECT_URI)));
+        logger.info("Opening Microsoft auth page...");
     }
 }

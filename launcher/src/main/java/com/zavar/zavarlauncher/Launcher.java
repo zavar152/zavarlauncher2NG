@@ -48,6 +48,7 @@ public class Launcher extends Application {
     private static final Path jreFolder = launcherFolder.resolve("jre");
     private static final Path minecraftFolder = launcherFolder.resolve("minecraft");
     private static final Path settingsFile = launcherFolder.resolve("settings.properties");
+    private static final Path accountFile = launcherFolder.resolve("account.dat");
     private static final Properties settings = new Properties();
     private static final Logger logger = LoggerContext.getContext().getLogger(Launcher.class.getName());
     private static TextArea consoleTextArea;
@@ -86,6 +87,10 @@ public class Launcher extends Application {
 
     public static Path getJreFolder() {
         return jreFolder;
+    }
+
+    public static Path getAccountFile() {
+        return accountFile;
     }
 
     private static void setupVersion() throws IOException {

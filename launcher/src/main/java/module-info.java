@@ -15,6 +15,9 @@ module com.zavar.zavarlauncher {
     requires minecraft.authenticator;
     requires jdk.httpserver;
     requires java.desktop;
+    requires java.net.http;
+    requires com.google.gson;
+    requires org.json;
 
     opens com.zavar.zavarlauncher to javafx.fxml;
     exports com.zavar.zavarlauncher;
